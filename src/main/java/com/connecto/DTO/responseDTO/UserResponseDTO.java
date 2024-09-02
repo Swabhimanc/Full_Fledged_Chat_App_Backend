@@ -1,5 +1,6 @@
 package com.connecto.DTO.responseDTO;
 
+import com.connecto.enums.Status;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +16,24 @@ public class UserResponseDTO {
     private String id;
     private String firstName;
     private String lastName;
+    private String avatar;
+    private Status status;
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 
     public String getFirstName() {
         return firstName;

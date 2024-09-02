@@ -1,31 +1,16 @@
 package com.connecto.model;
 
+import com.connecto.enums.MessageType;
+
 import java.util.Date;
 
 public class Message {
-    private String from;
     private String to;
-    private String message;
-    private Date createdAt;
-    private String type;
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    // Constructors, getters, setters, and validation logic
-
-    public String getFrom() {
-        return from;
-    }
-
-    public void setFrom(String from) {
-        this.from = from;
-    }
+    private String from;
+    private Enum<MessageType> type;
+    private Date createdAt = new Date();
+    private String text;
+    private String file;
 
     public String getTo() {
         return to;
@@ -35,12 +20,20 @@ public class Message {
         this.to = to;
     }
 
-    public String getMessage() {
-        return message;
+    public String getFrom() {
+        return from;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public Enum<MessageType> getType() {
+        return type;
+    }
+
+    public void setType(Enum<MessageType> type) {
+        this.type = type;
     }
 
     public Date getCreatedAt() {
@@ -51,8 +44,19 @@ public class Message {
         this.createdAt = createdAt;
     }
 
-    // Validate method
-    public static boolean validate(Message message) {
-        return message.getFrom() != null && message.getTo() != null && message.getMessage() != null;
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public String getFile() {
+        return file;
+    }
+
+    public void setFile(String file) {
+        this.file = file;
     }
 }

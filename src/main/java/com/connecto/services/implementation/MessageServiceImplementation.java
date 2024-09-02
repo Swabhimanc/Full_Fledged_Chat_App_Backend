@@ -1,11 +1,11 @@
 package com.connecto.services.implementation;
 
-import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.*;
 import com.connecto.model.Message;
 import com.connecto.repositories.MessageRepository;
 import com.connecto.repositories.UserRepository;
 import com.connecto.services.MessageService;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,32 +26,26 @@ public class MessageServiceImplementation implements MessageService {
     }
 
     public Object addMessage(Message message) throws ExecutionException, InterruptedException {
-        if (Message.validate(message)) {
 
-            //Validation to check if both users exist
-            DocumentSnapshot fromUser = userRepository.findUserById(message.getFrom());
-            DocumentSnapshot toUser = userRepository.findUserById(message.getTo());
-            if (!fromUser.exists() || !toUser.exists()) {
-                return new HashMap<>() {{
-                    put("status", false);
-                    put("message", "Users not found");
-                }};
-            }
-            //set the createdAt field for the Message
-            message.setCreatedAt(new Date());
-
-            //Save the message to the database
-            ApiFuture<DocumentReference> result = messageRepository.saveMessage(message);
-            return new HashMap<>() {{
-                put("status", result.get() != null);
-                put("message", "Message sent successfully");
-            }};
-        } else {
+        //Validation to check if both users exist
+        DocumentSnapshot fromUser = userRepository.findUserById(message.getFrom());
+        DocumentSnapshot toUser = userRepository.findUserById(message.getTo());
+        if (!fromUser.exists() || !toUser.exists()) {
             return new HashMap<>() {{
                 put("status", false);
-                put("message", "Something went wrong");
+                put("message", "Users not found");
             }};
         }
+        //set the createdAt field for the Message
+        message.setCreatedAt(new Date());
+
+        //Save the message to the database
+        ApiFuture<DocumentReference> result = messageRepository.saveMessage(message);
+        return new HashMap<>() {{
+            put("status", result.get() != null);
+            put("message", "Message sent successfully");
+        }};
+
     }
 
     public List<Map<?, ?>> getAllMessages(String from, String to) throws ExecutionException, InterruptedException {
@@ -90,7 +84,7 @@ public class MessageServiceImplementation implements MessageService {
 
         // Fetch the required batch of messages
         List<QueryDocumentSnapshot> querySnapshot = query.get().get().getDocuments();
-        DocumentSnapshot last = !querySnapshot.isEmpty() ?querySnapshot.get(querySnapshot.size() - 1):null;
+        DocumentSnapshot last = !querySnapshot.isEmpty() ? querySnapshot.get(querySnapshot.size() - 1) : null;
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
@@ -107,7 +101,7 @@ public class MessageServiceImplementation implements MessageService {
         return new HashMap<>() {{
             put("status", true);
             put("data", messages);
-            put("lastVisible", last==null?last:last.getId());
+            put("lastVisible", last == null ? last : last.getId());
         }};
     }
 }

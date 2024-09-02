@@ -1,43 +1,54 @@
 package com.connecto.websocket;
 
+import com.connecto.enums.Status;
+import com.connecto.model.User;
+import com.connecto.services.implementation.UserServiceImplementation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.simp.stomp.StompCommand;
+
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.GenericMessage;
-import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @Component
 public class WebSocketEventListener implements ChannelInterceptor {
 
+    @Autowired
+    UserServiceImplementation userServiceImplementation;
+
     @EventListener
-    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        GenericMessage object = (GenericMessage) event.getMessage().getHeaders().get("simpConnectMessage");
-        Map ob =(Map) object.getHeaders().get("nativeHeaders");
-//        System.out.println(ob.get("random"));
+    public void handleWebSocketConnectListener(SessionConnectEvent event) throws ExecutionException, InterruptedException {
+        try{
+            StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+            User user = (User) headerAccessor.getSessionAttributes().get("user");
+            userServiceImplementation.setUserStatus(user.getId(), Status.ONLINE);
+        }catch (Exception e){
+
+        }
     }
+
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionId = headerAccessor.getSessionId();
-//        System.out.println("WebSocket Disconnected: Session ID = " + sessionId);
+        try{
+            StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+            User user = (User) headerAccessor.getSessionAttributes().get("user");
+            userServiceImplementation.setUserStatus(user.getId(), Status.OFFLINE);
+        }catch (Exception e){
+
+        }
     }
 
     @EventListener
     public void handleWebSocketSubscribeListener(SessionSubscribeEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
-//        System.out.println("WebSocket Subscribed: Session ID = " + event);
+        System.out.println("WebSocket Subscribed: Session ID = " + event);
     }
 }
 

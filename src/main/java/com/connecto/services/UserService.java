@@ -1,5 +1,6 @@
 package com.connecto.services;
 
+import com.connecto.enums.Status;
 import com.connecto.model.User;
 
 import java.util.Map;
@@ -10,4 +11,5 @@ public interface UserService {
 
     Map<String, Object> getFriendRequests(User user) throws ExecutionException, InterruptedException;
 
+    void setUserStatus(String userId, Status status) throws ExecutionException, InterruptedException;
 }

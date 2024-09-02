@@ -1,8 +1,6 @@
 package com.connecto.utilities.security.filter;
 
-import com.connecto.model.User;
 import com.connecto.services.implementation.AuthServiceImplementation;
-import com.connecto.services.implementation.UserServiceImplementation;
 import com.connecto.utilities.CustomUserDetails;
 import com.connecto.utilities.security.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -12,7 +10,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -26,7 +23,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     JwtUtil jwtUtil;
 
     @Autowired
-    AuthServiceImplementation userServiceImplementation;
+    AuthServiceImplementation authServiceImplementation;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -50,7 +47,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             CustomUserDetails userDetails;
             try {
-                userDetails = userServiceImplementation.loadUserByUserId(userId);
+                userDetails = authServiceImplementation.loadUserByUserId(userId);
             } catch (Exception e) {
                 throw new RuntimeException();
             }

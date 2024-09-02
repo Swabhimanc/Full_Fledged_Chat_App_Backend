@@ -25,4 +25,8 @@ public class FriendRequestRepository {
     public List<QueryDocumentSnapshot> getAllRequests(String userId) throws ExecutionException, InterruptedException {
         return friendRequestRef.whereEqualTo("recipient", userId).get().get().getDocuments();
     }
+
+    public boolean deleteFriendRequest(String requestId){
+        return friendRequestRef.document(requestId).delete().isDone();
+    }
 }

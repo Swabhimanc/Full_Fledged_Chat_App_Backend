@@ -1,6 +1,7 @@
 package com.connecto.services.implementation;
 
 import com.connecto.DTO.responseDTO.UserResponseDTO;
+import com.connecto.enums.Status;
 import com.connecto.model.FriendRequest;
 import com.connecto.model.User;
 import com.connecto.repositories.FriendRequestRepository;
@@ -64,5 +65,9 @@ public class UserServiceImplementation implements UserService {
                 put("message", "Something went wrong while getting friend requests");
             }};
         }
+    }
+
+    public void setUserStatus(String userId,Status status) throws ExecutionException, InterruptedException {
+        userRepository.updateUser(userId,"status",status);
     }
 }

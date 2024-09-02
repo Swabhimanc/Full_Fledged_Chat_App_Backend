@@ -97,6 +97,7 @@ public class AuthServiceImplementation implements AuthService {
                 put("status", true);
                 put("message", "User logged in successfully");
                 put("token", jwtUtil.generateToken(user.getId(), new HashMap<>()));
+                put("user_id",user.getId());
             }};
         } else {
             return new HashMap<>() {{

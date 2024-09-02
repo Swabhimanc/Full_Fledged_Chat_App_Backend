@@ -1,7 +1,7 @@
 package com.connecto.model;
 
 
-import com.google.cloud.firestore.DocumentSnapshot;
+import com.connecto.enums.Status;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -21,14 +21,23 @@ public class User {
     private boolean verified = false;
     private String otp;
     private Date otpExpiry;
-    private List<Object> friends = new ArrayList<>();
+    private List<Friend> friends = new ArrayList<>();
     private String socketId;
+    private Status status;
 
-    public List<Object> getFriends() {
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public List<Friend> getFriends() {
         return friends;
     }
 
-    public void setFriends(List<Object> friends) {
+    public void setFriends(List<Friend> friends) {
         this.friends = friends;
     }
 
@@ -43,7 +52,6 @@ public class User {
     public User() {
 
     }
-
     public User(Map reqObj) {
         this.firstName = (String) reqObj.get("firstName");
         this.lastName = (String) reqObj.get("lastName");
