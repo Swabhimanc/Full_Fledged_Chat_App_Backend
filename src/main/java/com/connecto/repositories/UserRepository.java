@@ -77,4 +77,7 @@ public class UserRepository {
     public DocumentSnapshot findUserById(String userId) throws ExecutionException, InterruptedException {
         return usersRef.document(userId).get().get();
     }
+    public DocumentReference findUserReferenceById(String userId){
+        return usersRef.document(userId);
+    }
 }

@@ -4,6 +4,7 @@ import com.connecto.enums.Status;
 import com.connecto.model.FriendRequest;
 import com.connecto.model.Message;
 import com.connecto.model.User;
+import com.connecto.services.MessageService;
 import com.connecto.services.UserService;
 import com.connecto.services.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,12 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 @Controller
@@ -27,6 +32,9 @@ public class WebSocketController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private MessageService messageService;
 
     public WebSocketController(SimpMessagingTemplate template) {
         this.template = template;
@@ -88,5 +96,23 @@ public class WebSocketController {
     @MessageMapping("/file_message")
     public void fileMessages(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         System.out.println("Received Message"+message.getText());
+    }
+
+    @MessageMapping("/get_direct_conversations")
+    public void getDirectConversation(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
+
+        Map<String,Object> response = messageService.allDirectConversations(payload.get("user_id").toString());
+        template.convertAndSendToUser(payload.get("user_id").toString(),"/topic/get_direct_conversations",response);
+    }
+
+    @MessageMapping("/start_conversation")
+    public void startConversation(@Payload Map<String,Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
+        String from = payload.get("from").toString();
+        String to = payload.get("to").toString();
+
+        Map<String,Object> response = messageService.startConversation(from,to);
+        template.convertAndSendToUser(payload.get("from").toString(),"/topic/start_conversation",response);
     }
 }

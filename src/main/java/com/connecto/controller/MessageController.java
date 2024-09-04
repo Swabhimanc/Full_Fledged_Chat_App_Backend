@@ -50,4 +50,22 @@ public class MessageController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+    @GetMapping("/get_one_to_one")
+    public ResponseEntity<?> getOneToOne(@RequestParam String userId) throws ExecutionException, InterruptedException {
+        try{
+            Map<String,Object> response = messageService.allDirectConversations(userId);
+            return ResponseEntity.status(200).body(response);
+        }catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+    @GetMapping("/start_conversation")
+    public ResponseEntity<?> getOneToOne(@RequestBody Map<String,Object>payload) throws ExecutionException, InterruptedException {
+        try{
+            Map<String,Object> response = messageService.startConversation(payload.get("from").toString(),payload.get("to").toString());
+            return ResponseEntity.status(200).body(response);
+        }catch (Exception e){
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }

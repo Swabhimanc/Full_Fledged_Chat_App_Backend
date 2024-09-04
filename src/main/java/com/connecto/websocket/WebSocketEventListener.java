@@ -48,7 +48,7 @@ public class WebSocketEventListener implements ChannelInterceptor {
     public void handleWebSocketSubscribeListener(SessionSubscribeEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
-        System.out.println("WebSocket Subscribed: Session ID = " + event);
+//        System.out.println("WebSocket Subscribed: Session ID = " + event);
     }
 }
 

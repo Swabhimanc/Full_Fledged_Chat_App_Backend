@@ -7,17 +7,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+import java.util.Date;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserResponseDTO {
     private String id;
     private String firstName;
     private String lastName;
+    private String email;
     private String avatar;
     private Status status;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public Status getStatus() {
         return status;

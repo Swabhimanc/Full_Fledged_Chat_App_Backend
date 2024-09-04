@@ -7,7 +7,7 @@ import java.util.Date;
 public class Message {
     private String to;
     private String from;
-    private Enum<MessageType> type;
+    private MessageType type;
     private Date createdAt = new Date();
     private String text;
     private String file;
@@ -28,11 +28,11 @@ public class Message {
         this.from = from;
     }
 
-    public Enum<MessageType> getType() {
+    public MessageType getType() {
         return type;
     }
 
-    public void setType(Enum<MessageType> type) {
+    public void setType(MessageType type) {
         this.type = type;
     }
 

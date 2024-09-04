@@ -14,4 +14,8 @@ public interface MessageService {
     List<Map<?,?>> getAllMessages(String from, String to) throws ExecutionException, InterruptedException;
 
     Object getLimitedMessage(String from, String to, String lastVisible, Integer limit) throws ExecutionException, InterruptedException;
+
+    Map<String,Object> allDirectConversations(String userId) throws ExecutionException, InterruptedException;
+
+    Map<String, Object> startConversation(String from, String to) throws ExecutionException, InterruptedException;
 }

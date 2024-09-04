@@ -1,16 +1,31 @@
 package com.connecto.model;
 
+import com.connecto.enums.Status;
+
 public class Friend {
     private String id;
     private String firstName;
     private String lastName;
     private String avatar;
+    private Status status;
 
     public Friend(User user) {
         this.id = user.getId();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.avatar = user.getAvatar();
+        this.status = user.getStatus();
+    }
+
+    public Friend() {
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     public String getId() {
