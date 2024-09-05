@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 
 public interface MessageService {
 
-    Object addMessage(Message message) throws ExecutionException, InterruptedException;
+    void addMessage(String conversation_id, Message message) throws ExecutionException, InterruptedException;
 
     List<Map<?,?>> getAllMessages(String from, String to) throws ExecutionException, InterruptedException;
 
@@ -18,4 +18,6 @@ public interface MessageService {
     Map<String,Object> allDirectConversations(String userId) throws ExecutionException, InterruptedException;
 
     Map<String, Object> startConversation(String from, String to) throws ExecutionException, InterruptedException;
+
+    List<Message> getOneToOneMessages(String id) throws ExecutionException, InterruptedException;
 }

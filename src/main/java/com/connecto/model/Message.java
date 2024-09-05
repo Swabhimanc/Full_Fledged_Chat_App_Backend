@@ -10,53 +10,49 @@ public class Message {
     private MessageType type;
     private Date createdAt = new Date();
     private String text;
-    private String file;
+
+    public String getText() {
+        return text;
+    }
+
+    public Message setText(String text) {
+        this.text = text;
+        return this;
+    }
 
     public String getTo() {
         return to;
     }
 
-    public void setTo(String to) {
+    public Message setTo(String to) {
         this.to = to;
+        return this;
     }
 
     public String getFrom() {
         return from;
     }
 
-    public void setFrom(String from) {
+    public Message setFrom(String from) {
         this.from = from;
+        return this;
     }
 
     public MessageType getType() {
         return type;
     }
 
-    public void setType(MessageType type) {
+    public Message setType(MessageType type) {
         this.type = type;
+        return this;
     }
 
     public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public Message setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
-
-    public String getFile() {
-        return file;
-    }
-
-    public void setFile(String file) {
-        this.file = file;
+        return this;
     }
 }

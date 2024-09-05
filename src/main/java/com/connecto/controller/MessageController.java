@@ -18,15 +18,15 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
 
-    @PostMapping("/addmsg")
-    public ResponseEntity<?> addMessage(@RequestBody Message message) {
-        try {
-            Object result = messageService.addMessage(message);
-            return ResponseEntity.status(200).body(result);
-        } catch (ExecutionException | InterruptedException e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
+//    @PostMapping("/addmsg")
+//    public ResponseEntity<?> addMessage(@RequestBody Message message) {
+//        try {
+//            Object result = messageService.addMessage(conversation_id, message);
+//            return ResponseEntity.status(200).body(result);
+//        } catch (ExecutionException | InterruptedException e) {
+//            return ResponseEntity.status(500).body(e.getMessage());
+//        }
+//    }
 
     @PostMapping("/getmsg")
     public ResponseEntity<?> getAllMessages(@RequestParam String from, @RequestParam String to) {

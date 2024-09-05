@@ -1,5 +1,6 @@
 package com.connecto.controller;
 
+import com.connecto.enums.MessageType;
 import com.connecto.enums.Status;
 import com.connecto.model.FriendRequest;
 import com.connecto.model.Message;
@@ -14,9 +15,8 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -88,31 +88,58 @@ public class WebSocketController {
         }
     }
 
-    @MessageMapping("/text_message")
-    public void textMessages(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        System.out.println("Received Message"+message.getText());
-    }
-
-    @MessageMapping("/file_message")
-    public void fileMessages(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        System.out.println("Received Message"+message.getText());
-    }
-
     @MessageMapping("/get_direct_conversations")
     public void getDirectConversation(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
 
-        Map<String,Object> response = messageService.allDirectConversations(payload.get("user_id").toString());
-        template.convertAndSendToUser(payload.get("user_id").toString(),"/topic/get_direct_conversations",response);
+        Map<String, Object> response = messageService.allDirectConversations(payload.get("user_id").toString());
+        template.convertAndSendToUser(user.getId(), "/topic/get_direct_conversations", response);
     }
 
     @MessageMapping("/start_conversation")
-    public void startConversation(@Payload Map<String,Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void startConversation(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
         String from = payload.get("from").toString();
         String to = payload.get("to").toString();
 
-        Map<String,Object> response = messageService.startConversation(from,to);
-        template.convertAndSendToUser(payload.get("from").toString(),"/topic/start_conversation",response);
+        Map<String, Object> response = messageService.startConversation(from, to);
+        template.convertAndSendToUser(user.getId(), "/topic/start_conversation", response);
+    }
+
+    @MessageMapping("/get_messages")
+    public void getMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
+        List<Message> messages = messageService.getOneToOneMessages(payload.get("id").toString());
+        template.convertAndSendToUser(user.getId(), "/topic/get_messages", messages);
+    }
+
+    @MessageMapping("/text_message")
+    public void textMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        String conversation_id = payload.get("conversation_id").toString();
+        String to = payload.get("to").toString();
+        String from = payload.get("from").toString();
+        String type = payload.get("type").toString();
+        String msg = payload.get("msg").toString();
+
+        Message message = new Message()
+                .setFrom(from)
+                .setTo(to)
+                .setText(msg)
+                .setType(MessageType.valueOf(type));
+
+        messageService.addMessage(conversation_id,message);
+//        template.convertAndSendToUser(from,"/topic/text_message",message);
+        template.convertAndSendToUser(to,"/topic/text_message",new HashMap<>(){{
+            put("conversation_id",conversation_id);
+            put("message",message);
+        }});
+        template.convertAndSendToUser(from,"/topic/text_message",new HashMap<>(){{
+            put("conversation_id",conversation_id);
+            put("message",message);
+        }});
+    }
+
+    @MessageMapping("/file_message")
+    public void fileMessages(@Payload Map<String, Object> message, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
     }
 }

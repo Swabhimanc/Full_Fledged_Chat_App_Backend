@@ -1,5 +1,6 @@
 package com.connecto.repositories;
 
+import com.connecto.model.Message;
 import com.google.cloud.firestore.*;
 import org.springframework.stereotype.Repository;
 
@@ -37,5 +38,14 @@ public class OneToOneMessageRepository {
             put("participants",List.of(from,to));
             put("messages",List.of());
         }}).get();
+    }
+
+    public DocumentReference getConversationById(String id) {
+        return oneToOneRef.document(id);
+    }
+
+    public void addMessageToConversation(String conversationId, Message message) {
+        DocumentReference conversationRef = getConversationById(conversationId);
+        conversationRef.update("messages",FieldValue.arrayUnion(message));
     }
 }

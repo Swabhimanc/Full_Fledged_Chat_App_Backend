@@ -30,27 +30,8 @@ public class MessageServiceImplementation implements MessageService {
         this.oneToOneMessageRepository = oneToOneMessageRepository;
     }
 
-    public Object addMessage(Message message) throws ExecutionException, InterruptedException {
-
-        //Validation to check if both users exist
-        DocumentSnapshot fromUser = userRepository.findUserById(message.getFrom());
-        DocumentSnapshot toUser = userRepository.findUserById(message.getTo());
-        if (!fromUser.exists() || !toUser.exists()) {
-            return new HashMap<>() {{
-                put("status", false);
-                put("message", "Users not found");
-            }};
-        }
-        //set the createdAt field for the Message
-        message.setCreatedAt(new Date());
-
-        //Save the message to the database
-        ApiFuture<DocumentReference> result = messageRepository.saveMessage(message);
-        return new HashMap<>() {{
-            put("status", result.get() != null);
-            put("message", "Message sent successfully");
-        }};
-
+    public void addMessage(String conversation_id, Message message) throws ExecutionException, InterruptedException {
+        oneToOneMessageRepository.addMessageToConversation(conversation_id,message);
     }
 
     public List<Map<?, ?>> getAllMessages(String from, String to) throws ExecutionException, InterruptedException {
@@ -174,5 +155,15 @@ public class MessageServiceImplementation implements MessageService {
             put("message", finalChatExists ?"Conversation fetched successfully":"New chat created successfully");
             put("data", oneToOneMessage);
         }};
+    }
+
+    @Override
+    public List<Message> getOneToOneMessages(String id) throws ExecutionException, InterruptedException {
+        DocumentReference messageRef = oneToOneMessageRepository.getConversationById(id);
+        OneToOneMessage response = messageRef.get().get().toObject(OneToOneMessage.class);
+        if(response!=null){
+            return response.getMessages();
+        }
+        return new ArrayList<>();
     }
 }
