@@ -30,19 +30,31 @@ public class WebSocketServiceImplementation implements WebSocketService {
     public Map<String, Object> acceptFriendRequest(FriendRequest request) throws ExecutionException, InterruptedException {
         User sender = userRepository.findUserById(request.getSender()).toObject(User.class);
         User recipient = userRepository.findUserById(request.getRecipient()).toObject(User.class);
+
         List<Friend> senderFriends = sender.getFriends();
         List<Friend> recipientFriends = recipient.getFriends();
-        userRepository.updateUser(sender.getId(),"friends",senderFriends);
-        userRepository.updateUser(recipient.getId(),"friends",recipientFriends);
-        if(friendRequestRepository.deleteFriendRequest(request.getId())){
-            return new HashMap<>(){{
-                put("status",true);
-                put("message","Friend request accepted");
+
+        //TODO Add a friends object in the senderFriends and recipientFriends
+
+        userRepository.updateUser(sender.getId(), "friends", senderFriends);
+        userRepository.updateUser(recipient.getId(), "friends", recipientFriends);
+        if (friendRequestRepository.deleteFriendRequest(request.getId())) {
+            return new HashMap<>() {{
+                put("status", true);
+                put("message", "Friend request accepted");
             }};
         }
-        return new HashMap<>(){{
-            put("status",false);
-            put("message","Something went wrong");
+        return new HashMap<>() {{
+            put("status", false);
+            put("message", "Something went wrong");
         }};
+    }
+
+    @Override
+    public Map<String, Object> newFriendRequest(String from, String to) throws ExecutionException, InterruptedException {
+        FriendRequest friendRequest = new FriendRequest();
+        friendRequest.setSender(from);
+        friendRequest.setRecipient(to);
+        return friendRequestRepository.addNewFriendRequest(friendRequest);
     }
 }

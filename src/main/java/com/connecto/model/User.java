@@ -24,34 +24,12 @@ public class User {
     private List<Friend> friends = new ArrayList<>();
     private String socketId;
     private Status status;
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public List<Friend> getFriends() {
-        return friends;
-    }
-
-    public void setFriends(List<Friend> friends) {
-        this.friends = friends;
-    }
-
-    public String getSocketId() {
-        return socketId;
-    }
-
-    public void setSocketId(String socketId) {
-        this.socketId = socketId;
-    }
+    private List<String> friendRequests;
 
     public User() {
 
     }
+
     public User(Map reqObj) {
         this.firstName = (String) reqObj.get("firstName");
         this.lastName = (String) reqObj.get("lastName");
@@ -81,6 +59,38 @@ public class User {
         String emailRegex = "^[\\w-\\.]+@[\\w-]+\\.[\\w-]{2,4}$";
         Pattern pattern = Pattern.compile(emailRegex);
         return pattern.matcher(email).matches();
+    }
+
+    public List<String> getFriendRequests() {
+        return friendRequests;
+    }
+
+    public void setFriendRequests(List<String> friendRequests) {
+        this.friendRequests = friendRequests;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public List<Friend> getFriends() {
+        return friends;
+    }
+
+    public void setFriends(List<Friend> friends) {
+        this.friends = friends;
+    }
+
+    public String getSocketId() {
+        return socketId;
+    }
+
+    public void setSocketId(String socketId) {
+        this.socketId = socketId;
     }
 
     public boolean isVerified() {

@@ -40,6 +40,9 @@ public class WebSocketController {
         this.template = template;
     }
 
+    //The client should send message to /app/friend-request
+    //The client should subscribe to /user/${user_id}/topic/friend_request
+
     @MessageMapping("/send-message")
 //    @SendTo("/topic/message-receive")
     public void sendMessage(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
@@ -52,12 +55,19 @@ public class WebSocketController {
         return "...";
     }
 
-    @MessageMapping("/new-friend-request") //The client should send message to /app/friend-request
-    //The client should subscribe to /user/${user_id}/topic/friend_request
-    public void friendRequest(@Payload FriendRequest request, SimpMessageHeaderAccessor headerAccessor) {
+    @MessageMapping("/send_friend_request")
+    public void newFriendRequest(@Payload Map<String,Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) headerAccessor.getSessionAttributes().get("user");
-        template.convertAndSendToUser(request.getRecipient(), "/topic/friend-request", "New Friend request received");
-        template.convertAndSendToUser(request.getSender(), "/topic/friend-request", "Request sent successfully");
+        String from = payload.get("from").toString();
+        String to = payload.get("to").toString();
+
+        Map<String,Object> result = webSocketService.newFriendRequest(from,to);
+        if(result.get("status").equals("success")){
+            template.convertAndSendToUser(from,"/topic/request_sent",result);
+            template.convertAndSendToUser(to,"/topic/new_friend_request","Friend Request Received from "+user.getFirstName());
+        }else{
+            template.convertAndSendToUser(from,"/topic/request_sent",result);
+        }
     }
 
     @MessageMapping("/accept-request")

@@ -2,7 +2,6 @@ package com.connecto.services.implementation;
 
 import com.connecto.DTO.responseDTO.UserResponseDTO;
 import com.connecto.enums.Status;
-import com.connecto.model.FriendRequest;
 import com.connecto.model.User;
 import com.connecto.repositories.FriendRequestRepository;
 import com.connecto.repositories.UserRepository;
@@ -34,9 +33,11 @@ public class UserServiceImplementation implements UserService {
         List<UserResponseDTO> response = new ArrayList<>();
         List<QueryDocumentSnapshot> usersSnapshot = userRepository.getAllUsers();
         usersSnapshot.forEach(doc -> {
-            if (!doc.getId().equals(user.getId()) && !user.getFriends().contains(doc.getId())) {
-                UserResponseDTO userResponseDTO = doc.toObject(UserResponseDTO.class);
-                response.add(userResponseDTO);
+            if (!doc.getId().equals(user.getId())) {
+                if (user.getFriends() == null || !user.getFriends().contains(doc.getId())) {
+                    UserResponseDTO userResponseDTO = doc.toObject(UserResponseDTO.class);
+                    response.add(userResponseDTO);
+                }
             }
         });
         return new HashMap<>() {{
@@ -49,16 +50,19 @@ public class UserServiceImplementation implements UserService {
     @Override
     public Map<String, Object> getFriendRequests(User user) {
         try {
-            List<QueryDocumentSnapshot> result = friendRequestRepository.getAllRequests(user.getId());
-            List<FriendRequest> response = new ArrayList<>();
-            result.forEach(doc -> {
-                response.add(doc.toObject(FriendRequest.class));
-            });
-            return new HashMap<>() {{
-                put("status", true);
-                put("message", "Friend Requests fetched successfully");
-                put("data", response);
-            }};
+            List<Map<String, Object>> result = friendRequestRepository.getAllRequests(user);
+            if (!result.isEmpty()) {
+                return new HashMap<>() {{
+                    put("status", true);
+                    put("message", "Friend Requests fetched successfully");
+                    put("data", result);
+                }};
+            }else {
+                return new HashMap<>() {{
+                    put("status", true);
+                    put("message", "You have no new friend requests");
+                }};
+            }
         } catch (Exception e) {
             return new HashMap<>() {{
                 put("status", false);
@@ -67,7 +71,7 @@ public class UserServiceImplementation implements UserService {
         }
     }
 
-    public void setUserStatus(String userId,Status status) throws ExecutionException, InterruptedException {
-        userRepository.updateUser(userId,"status",status);
+    public void setUserStatus(String userId, Status status) throws ExecutionException, InterruptedException {
+        userRepository.updateUser(userId, "status", status);
     }
 }
