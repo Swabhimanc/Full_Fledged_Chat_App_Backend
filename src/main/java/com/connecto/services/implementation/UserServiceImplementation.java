@@ -2,6 +2,7 @@ package com.connecto.services.implementation;
 
 import com.connecto.DTO.responseDTO.UserResponseDTO;
 import com.connecto.enums.Status;
+import com.connecto.model.Friend;
 import com.connecto.model.User;
 import com.connecto.repositories.FriendRequestRepository;
 import com.connecto.repositories.UserRepository;
@@ -33,11 +34,9 @@ public class UserServiceImplementation implements UserService {
         List<UserResponseDTO> response = new ArrayList<>();
         List<QueryDocumentSnapshot> usersSnapshot = userRepository.getAllUsers();
         usersSnapshot.forEach(doc -> {
-            if (!doc.getId().equals(user.getId())) {
-                if (user.getFriends() == null || !user.getFriends().contains(doc.getId())) {
-                    UserResponseDTO userResponseDTO = doc.toObject(UserResponseDTO.class);
-                    response.add(userResponseDTO);
-                }
+            if (user.getFriends() == null || !user.getFriends().contains(doc.getId()) && !doc.getId().equals(user.getId())) {
+                UserResponseDTO userResponseDTO = doc.toObject(UserResponseDTO.class);
+                response.add(userResponseDTO);
             }
         });
         return new HashMap<>() {{
@@ -57,7 +56,7 @@ public class UserServiceImplementation implements UserService {
                     put("message", "Friend Requests fetched successfully");
                     put("data", result);
                 }};
-            }else {
+            } else {
                 return new HashMap<>() {{
                     put("status", true);
                     put("message", "You have no new friend requests");
@@ -73,5 +72,24 @@ public class UserServiceImplementation implements UserService {
 
     public void setUserStatus(String userId, Status status) throws ExecutionException, InterruptedException {
         userRepository.updateUser(userId, "status", status);
+    }
+
+    @Override
+    public Map<String, Object> getFriends(User user) throws ExecutionException, InterruptedException {
+        List<String> friends = user.getFriends();
+        List<Friend> response = new ArrayList<>();
+        if(friends!=null){
+            for(String id : friends){
+                response.add(userRepository.findUserById(id).toObject(Friend.class));
+            }
+            return new HashMap<>(){{
+                put("status",true);
+                put("data",response);
+            }};
+        }
+        return new HashMap<>(){{
+            put("status",false);
+            put("data",new ArrayList<>());
+        }};
     }
 }

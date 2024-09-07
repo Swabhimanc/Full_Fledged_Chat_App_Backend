@@ -1,16 +1,14 @@
 package com.connecto.services.implementation;
 
-import com.connecto.model.Friend;
 import com.connecto.model.FriendRequest;
-import com.connecto.model.User;
 import com.connecto.repositories.FriendRequestRepository;
 import com.connecto.repositories.UserRepository;
 import com.connecto.services.WebSocketService;
+import com.google.cloud.firestore.FieldValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -27,27 +25,27 @@ public class WebSocketServiceImplementation implements WebSocketService {
     }
 
     @Override
-    public Map<String, Object> acceptFriendRequest(FriendRequest request) throws ExecutionException, InterruptedException {
-        User sender = userRepository.findUserById(request.getSender()).toObject(User.class);
-        User recipient = userRepository.findUserById(request.getRecipient()).toObject(User.class);
+    public Map<String, Object> acceptFriendRequest(Map<String, Object> request) throws ExecutionException, InterruptedException {
+        try {
+            FriendRequest friendRequest = friendRequestRepository.getFriendRequestById(request.get("request_id").toString());
 
-        List<Friend> senderFriends = sender.getFriends();
-        List<Friend> recipientFriends = recipient.getFriends();
+            //TODO Add a friends object in the senderFriends and recipientFriends
 
-        //TODO Add a friends object in the senderFriends and recipientFriends
+            userRepository.updateUser(friendRequest.getSender(), "friends", FieldValue.arrayUnion(friendRequest.getRecipient()));
+            userRepository.updateUser(friendRequest.getRecipient(), "friends", FieldValue.arrayUnion(friendRequest.getSender()));
+            userRepository.updateUser(friendRequest.getRecipient(), "friendRequests", FieldValue.arrayRemove(friendRequest.getId()));
+            friendRequestRepository.deleteFriendRequest(friendRequest.getId());
 
-        userRepository.updateUser(sender.getId(), "friends", senderFriends);
-        userRepository.updateUser(recipient.getId(), "friends", recipientFriends);
-        if (friendRequestRepository.deleteFriendRequest(request.getId())) {
             return new HashMap<>() {{
                 put("status", true);
-                put("message", "Friend request accepted");
+                put("message", "Accepted Friend Request");
+            }};
+        } catch (Exception e) {
+            return new HashMap<>() {{
+                put("status", false);
+                put("message", "Something went wrong");
             }};
         }
-        return new HashMap<>() {{
-            put("status", false);
-            put("message", "Something went wrong");
-        }};
     }
 
     @Override

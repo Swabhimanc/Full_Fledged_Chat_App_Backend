@@ -37,7 +37,7 @@ public class FriendRequestRepository {
                 DocumentSnapshot sender = usersRef.document(requestDoc.getSender()).get().get();
                 response.add(new HashMap<>(){{
                     put("id",requestDoc.getId());
-                    put("user_id",requestDoc.getSender());
+                    put("sender_id",requestDoc.getSender());
                     put("firstName",sender.get("firstName"));
                     put("lastName",sender.get("lastName"));
                     put("avatar",sender.get("avatar"));
@@ -65,12 +65,12 @@ public class FriendRequestRepository {
                 FriendRequest request = existingRequest.getDocuments().get(0).toObject(FriendRequest.class);
                 if (request.getSender().equals(friendRequest.getSender())) {
                     return new HashMap<>() {{
-                        put("status", "error");
+                        put("status", "info");
                         put("message", "You have already sent this user a request");
                     }};
                 } else {
                     return new HashMap<>() {{
-                        put("status", "error");
+                        put("status", "info");
                         put("message", "You have a pending request from this user");
                     }};
                 }
@@ -84,7 +84,7 @@ public class FriendRequestRepository {
             userReference.update("friendRequests", FieldValue.arrayUnion(friendRequest.getId()));
             return new HashMap<>() {{
                 put("status", "success");
-                put("message", "Request added successfully");
+                put("message", "Request sent successfully");
             }};
         } catch (Exception e) {
             return new HashMap<>() {{
@@ -92,5 +92,9 @@ public class FriendRequestRepository {
                 put("message", "Something went wrong");
             }};
         }
+    }
+
+    public FriendRequest getFriendRequestById(String id) throws ExecutionException, InterruptedException {
+        return friendRequestRef.document(id).get().get().toObject(FriendRequest.class);
     }
 }

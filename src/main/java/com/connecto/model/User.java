@@ -21,10 +21,10 @@ public class User {
     private boolean verified = false;
     private String otp;
     private Date otpExpiry;
-    private List<Friend> friends = new ArrayList<>();
+    private List<String> friends = new ArrayList<>();
     private String socketId;
     private Status status;
-    private List<String> friendRequests;
+    private List<String> friendRequests = new ArrayList<>();
 
     public User() {
 
@@ -77,11 +77,11 @@ public class User {
         this.status = status;
     }
 
-    public List<Friend> getFriends() {
+    public List<String> getFriends() {
         return friends;
     }
 
-    public void setFriends(List<Friend> friends) {
+    public void setFriends(List<String> friends) {
         this.friends = friends;
     }
 

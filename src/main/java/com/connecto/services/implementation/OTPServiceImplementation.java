@@ -100,7 +100,7 @@ public class OTPServiceImplementation implements OTPService {
                 put("status", true);
                 put("message", "OTP Verified Successfully.");
                 put("token",jwtUtil.generateToken(userSnapshot.getId(),new HashMap<>()));
-                put("userId",userSnapshot.getId());
+                put("user_id",userSnapshot.getId());
 
             }};
         }

@@ -70,20 +70,19 @@ public class WebSocketController {
         }
     }
 
-    @MessageMapping("/accept-request")
-    public void acceptRequest(@Payload FriendRequest request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    @MessageMapping("/accept_request")
+    public void acceptRequest(@Payload Map<String,Object> request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) headerAccessor.getSessionAttributes().get("user");
         //TODO When the accept request is received.
         //1. We are getting the current user object from the interceptor.
         //2. In the friends list of both the Sender and Recipient User, add the new reference.
+        Map<String, Object> response = webSocketService.acceptFriendRequest(request);
         try {
-            Map<String, Object> response = webSocketService.acceptFriendRequest(request);
             if ((boolean) response.get("status")) {
-                template.convertAndSendToUser(request.getRecipient(), "/topic/request-accepted", "Friend request accepted");
-                template.convertAndSendToUser(request.getSender(), "/topic/request-accepted", "Friend request accepted");
+                template.convertAndSendToUser(request.get("sender_id").toString(),"/topic/request_accepted", user.getFirstName()+" accepted your Friend Request");
             }
         } catch (Exception e) {
-
+            template.convertAndSendToUser(user.getId(),"/topic/request_accepted","Something went wrong");
         }
     }
 

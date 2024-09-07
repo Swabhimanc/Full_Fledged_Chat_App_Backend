@@ -45,11 +45,8 @@ public class UserController {
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorised");
             }
-            return ResponseEntity.status(200).body(new HashMap<>() {{
-                put("status", true);
-                put("message", "Friend fetched Successfully");
-                put("data", user.getFriends());
-            }});
+            Map<String,Object> response = userService.getFriends(user);
+            return ResponseEntity.status(200).body(response);
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
