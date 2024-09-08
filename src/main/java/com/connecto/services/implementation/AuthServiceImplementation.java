@@ -92,12 +92,13 @@ public class AuthServiceImplementation implements AuthService {
 
         User user = userSnapshot.isEmpty() ? null : userSnapshot.getDocuments().get(0).toObject(User.class);
         if (user != null && passwordEncoder.matches(requestPassword, user.getPassword())) {
-
+            UserResponseDTO userResponseDTO = new UserResponseDTO(user);
             return new HashMap<>() {{
                 put("status", true);
                 put("message", "User logged in successfully");
                 put("token", jwtUtil.generateToken(user.getId(), new HashMap<>()));
                 put("user_id",user.getId());
+                put("user",userResponseDTO);
             }};
         } else {
             return new HashMap<>() {{
@@ -223,12 +224,12 @@ public class AuthServiceImplementation implements AuthService {
     }
 
     public Object updateProfile(String userId, Object object) throws ExecutionException, InterruptedException {
-        User updatedUser = userRepository.updateUser(userId, (Map<String, Object>) object);
+        UserResponseDTO updatedUser = userRepository.updateUser(userId, (Map<String, Object>) object);
 
         return new HashMap<>() {{
             put("status", true);
             put("message", "Profile updated successfully");
-            put("user", updatedUser.toMap());
+            put("user", updatedUser);
         }};
     }
 }

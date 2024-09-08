@@ -1,5 +1,6 @@
 package com.connecto.services.implementation;
 
+import com.connecto.DTO.responseDTO.UserResponseDTO;
 import com.connecto.model.User;
 import com.connecto.repositories.OTPRepository;
 import com.connecto.repositories.UserRepository;
@@ -43,7 +44,7 @@ public class OTPServiceImplementation implements OTPService {
 
         final String OTP = passwordEncoder.encode(EmailService.sendOTP(user.getFirstName(),user.getEmail()));
 //        System.out.println(OTP);
-        User updatedUser = userRepository.updateUser(user.getId(),new HashMap<>(){{
+        UserResponseDTO updatedUser = userRepository.updateUser(user.getId(),new HashMap<>(){{
             put("otp",OTP);
             put("otpExpiry",new Date(System.currentTimeMillis()+ Duration.ofMinutes(10).toMillis()));
         }});

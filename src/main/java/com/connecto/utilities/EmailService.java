@@ -32,7 +32,7 @@ public class EmailService {
         email.setHtmlMsg(htmlTemplate);
         email.addTo(userEmail);
         // send the email
-//        email.send();
+        email.send();
         System.out.println(OTP);
         return OTP;
     }

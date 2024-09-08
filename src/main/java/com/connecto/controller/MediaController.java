@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/api/media")
+@RequestMapping("/media")
 public class MediaController {
     @Autowired
     private MediaService mediaService;

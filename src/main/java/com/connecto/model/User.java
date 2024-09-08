@@ -25,6 +25,7 @@ public class User {
     private String socketId;
     private Status status;
     private List<String> friendRequests = new ArrayList<>();
+    private String about;
 
     public User() {
 
@@ -59,6 +60,14 @@ public class User {
         String emailRegex = "^[\\w-\\.]+@[\\w-]+\\.[\\w-]{2,4}$";
         Pattern pattern = Pattern.compile(emailRegex);
         return pattern.matcher(email).matches();
+    }
+
+    public String getAbout() {
+        return about;
+    }
+
+    public void setAbout(String about) {
+        this.about = about;
     }
 
     public List<String> getFriendRequests() {

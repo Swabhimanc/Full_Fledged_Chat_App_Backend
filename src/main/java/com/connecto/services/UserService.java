@@ -14,4 +14,7 @@ public interface UserService {
     void setUserStatus(String userId, Status status) throws ExecutionException, InterruptedException;
 
     Map<String, Object> getFriends(User user) throws ExecutionException, InterruptedException;
+
+    Map<String, Object> updateUserProfile(String id,Map<String, Object> object) throws ExecutionException, InterruptedException;
+
 }

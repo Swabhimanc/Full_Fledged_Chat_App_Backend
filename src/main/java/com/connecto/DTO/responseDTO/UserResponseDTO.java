@@ -1,13 +1,8 @@
 package com.connecto.DTO.responseDTO;
 
 import com.connecto.enums.Status;
+import com.connecto.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.util.Date;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserResponseDTO {
@@ -17,6 +12,27 @@ public class UserResponseDTO {
     private String email;
     private String avatar;
     private Status status;
+    private String about;
+
+    public UserResponseDTO() {
+    }
+
+    public UserResponseDTO(User user) {
+        this.id = user.getId();
+        this.firstName = user.getFirstName();
+        this.lastName = user.getLastName();
+        this.email = user.getEmail();
+        this.avatar = user.getAvatar();
+        this.status = user.getStatus();
+    }
+
+    public String getAbout() {
+        return about;
+    }
+
+    public void setAbout(String about) {
+        this.about = about;
+    }
 
     public String getEmail() {
         return email;

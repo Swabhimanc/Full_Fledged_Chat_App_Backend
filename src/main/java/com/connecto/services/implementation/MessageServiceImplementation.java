@@ -160,9 +160,9 @@ public class MessageServiceImplementation implements MessageService {
     @Override
     public List<Message> getOneToOneMessages(String id) throws ExecutionException, InterruptedException {
         DocumentReference messageRef = oneToOneMessageRepository.getConversationById(id);
-        OneToOneMessage response = messageRef.get().get().toObject(OneToOneMessage.class);
-        if(response!=null){
-            return response.getMessages();
+        List<Message> messages = (List<Message>) messageRef.get().get().get("messages");
+        if(messages!=null){
+            return messages;
         }
         return new ArrayList<>();
     }

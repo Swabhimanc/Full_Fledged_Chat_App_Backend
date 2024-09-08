@@ -2,7 +2,6 @@ package com.connecto.controller;
 
 import com.connecto.enums.MessageType;
 import com.connecto.enums.Status;
-import com.connecto.model.FriendRequest;
 import com.connecto.model.Message;
 import com.connecto.model.User;
 import com.connecto.services.MessageService;
@@ -16,10 +15,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Controller
@@ -56,22 +52,22 @@ public class WebSocketController {
     }
 
     @MessageMapping("/send_friend_request")
-    public void newFriendRequest(@Payload Map<String,Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void newFriendRequest(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) headerAccessor.getSessionAttributes().get("user");
         String from = payload.get("from").toString();
         String to = payload.get("to").toString();
 
-        Map<String,Object> result = webSocketService.newFriendRequest(from,to);
-        if(result.get("status").equals("success")){
-            template.convertAndSendToUser(from,"/topic/request_sent",result);
-            template.convertAndSendToUser(to,"/topic/new_friend_request","Friend Request Received from "+user.getFirstName());
-        }else{
-            template.convertAndSendToUser(from,"/topic/request_sent",result);
+        Map<String, Object> result = webSocketService.newFriendRequest(from, to);
+        if (result.get("status").equals("success")) {
+            template.convertAndSendToUser(from, "/topic/request_sent", result);
+            template.convertAndSendToUser(to, "/topic/new_friend_request", "Friend Request Received from " + user.getFirstName());
+        } else {
+            template.convertAndSendToUser(from, "/topic/request_sent", result);
         }
     }
 
     @MessageMapping("/accept_request")
-    public void acceptRequest(@Payload Map<String,Object> request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void acceptRequest(@Payload Map<String, Object> request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) headerAccessor.getSessionAttributes().get("user");
         //TODO When the accept request is received.
         //1. We are getting the current user object from the interceptor.
@@ -79,10 +75,10 @@ public class WebSocketController {
         Map<String, Object> response = webSocketService.acceptFriendRequest(request);
         try {
             if ((boolean) response.get("status")) {
-                template.convertAndSendToUser(request.get("sender_id").toString(),"/topic/request_accepted", user.getFirstName()+" accepted your Friend Request");
+                template.convertAndSendToUser(request.get("sender_id").toString(), "/topic/request_accepted", user.getFirstName() + " accepted your Friend Request");
             }
         } catch (Exception e) {
-            template.convertAndSendToUser(user.getId(),"/topic/request_accepted","Something went wrong");
+            template.convertAndSendToUser(user.getId(), "/topic/request_accepted", "Something went wrong");
         }
     }
 
@@ -118,7 +114,7 @@ public class WebSocketController {
     @MessageMapping("/get_messages")
     public void getMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        List<Message> messages = messageService.getOneToOneMessages(payload.get("id").toString());
+        List<Message> messages = messageService.getOneToOneMessages(payload.get("conversation_id").toString());
         template.convertAndSendToUser(user.getId(), "/topic/get_messages", messages);
     }
 
@@ -128,7 +124,7 @@ public class WebSocketController {
         String to = payload.get("to").toString();
         String from = payload.get("from").toString();
         String type = payload.get("type").toString();
-        String msg = payload.get("msg").toString();
+        String msg = payload.get("message").toString();
 
         Message message = new Message()
                 .setFrom(from)
@@ -136,13 +132,12 @@ public class WebSocketController {
                 .setText(msg)
                 .setType(MessageType.valueOf(type));
 
-        messageService.addMessage(conversation_id,message);
-//        template.convertAndSendToUser(from,"/topic/text_message",message);
-        template.convertAndSendToUser(to,"/topic/text_message",new HashMap<>(){{
-            put("conversation_id",conversation_id);
-            put("message",message);
+        messageService.addMessage(conversation_id, message);
+        template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
+            put("conversation_id", conversation_id);
+            put("message", message);
         }});
-        template.convertAndSendToUser(from,"/topic/text_message",new HashMap<>(){{
+        template.convertAndSendToUser(from,"/topic/new_message",new HashMap<>(){{
             put("conversation_id",conversation_id);
             put("message",message);
         }});

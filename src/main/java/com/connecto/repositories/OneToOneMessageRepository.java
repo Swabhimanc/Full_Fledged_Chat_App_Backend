@@ -24,11 +24,21 @@ public class OneToOneMessageRepository {
     }
 
     public List<QueryDocumentSnapshot> getDirectConversation(DocumentReference from, DocumentReference to) throws ExecutionException, InterruptedException {
-        List<QueryDocumentSnapshot> documents = oneToOneRef.whereEqualTo("participants", List.of(from,to))
+        List<QueryDocumentSnapshot> document1 = oneToOneRef
+                .whereEqualTo("participants", List.of(from,to))
                 .get()
                 .get()
                 .getDocuments();
-        return documents;
+        List<QueryDocumentSnapshot> document2 = oneToOneRef
+                .whereEqualTo("participants", List.of(to,from))
+                .get()
+                .get()
+                .getDocuments();
+        if(document1.isEmpty()){
+            return document2; //or document1
+        }else {
+            return document1;
+        }
     }
 
     public WriteResult createDirectConversation(DocumentReference from, DocumentReference to) throws ExecutionException, InterruptedException {

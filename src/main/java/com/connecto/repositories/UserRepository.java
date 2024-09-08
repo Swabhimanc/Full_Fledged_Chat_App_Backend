@@ -1,5 +1,6 @@
 package com.connecto.repositories;
 
+import com.connecto.DTO.responseDTO.UserResponseDTO;
 import com.google.cloud.firestore.*;
 import com.connecto.model.User;
 import org.springframework.stereotype.Repository;
@@ -61,9 +62,9 @@ public class UserRepository {
     public void updateUser(String userId, String field, Object value) throws ExecutionException, InterruptedException {
         usersRef.document(userId).update(field, value).get();
     }
-    public User updateUser(String userId, Map<String,Object>data) throws ExecutionException, InterruptedException {
+    public UserResponseDTO updateUser(String userId, Map<String,Object>data) throws ExecutionException, InterruptedException {
         usersRef.document(userId).update(data).get();
-        return usersRef.document(userId).get().get().toObject(User.class);
+        return usersRef.document(userId).get().get().toObject(UserResponseDTO.class);
     }
 
     public void deleteOtp(String otpId) throws ExecutionException, InterruptedException {

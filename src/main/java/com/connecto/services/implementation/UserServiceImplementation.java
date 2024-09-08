@@ -92,4 +92,21 @@ public class UserServiceImplementation implements UserService {
             put("data",new ArrayList<>());
         }};
     }
+
+    @Override
+    public Map<String, Object> updateUserProfile(String id, Map<String, Object> object) throws ExecutionException, InterruptedException {
+        try{
+            UserResponseDTO user = userRepository.updateUser(id,object);
+            return new HashMap<>(){{
+                put("status",true);
+                put("message","User updated successfully");
+                put("user",user);
+            }};
+        } catch (Exception e) {
+            return new HashMap<>(){{
+                put("status",false);
+                put("message","Something went wrong");
+            }};
+        }
+    }
 }
