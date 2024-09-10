@@ -36,17 +36,12 @@ public class WebSocketController {
         this.template = template;
     }
 
-    //The client should send message to /app/friend-request
-    //The client should subscribe to /user/${user_id}/topic/friend_request
-
     @MessageMapping("/send-message")
-//    @SendTo("/topic/message-receive")
     public void sendMessage(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
         template.convertAndSendToUser("", "/topic/message-receive/" + message.getTo(), message);
     }
 
     @MessageMapping("/add-user")//app/add-user
-    @SendTo("/topic/public")
     public String addUser(@Payload String userId, SimpMessageHeaderAccessor headerAccessor) {
         return "...";
     }
@@ -119,7 +114,7 @@ public class WebSocketController {
     }
 
     @MessageMapping("/text_message")
-    public void textMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void textMessages(@org.jetbrains.annotations.NotNull @Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         String conversation_id = payload.get("conversation_id").toString();
         String to = payload.get("to").toString();
         String from = payload.get("from").toString();

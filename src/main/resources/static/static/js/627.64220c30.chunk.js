@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkchat=self.webpackChunkchat||[]).push([[627],{69627:(e,r,t)=>{t.r(r),t.d(r,{default:()=>a});var c=t(65043);const a=function(e){var r=e.id;return(0,e.renderWrap)(c.createElement("iframe",{src:"https://gfycat.com/ifr/".concat(r),width:"100%",height:"500px",frameBorder:"0",scrolling:"no",allowFullScreen:!0}))}}}]);
+//# sourceMappingURL=627.64220c30.chunk.js.map

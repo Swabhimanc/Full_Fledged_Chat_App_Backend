@@ -14,9 +14,6 @@ public class UserResponseDTO {
     private Status status;
     private String about;
 
-    public UserResponseDTO() {
-    }
-
     public UserResponseDTO(User user) {
         this.id = user.getId();
         this.firstName = user.getFirstName();
@@ -24,6 +21,10 @@ public class UserResponseDTO {
         this.email = user.getEmail();
         this.avatar = user.getAvatar();
         this.status = user.getStatus();
+        this.about = user.getAbout();
+    }
+    public UserResponseDTO() {
+
     }
 
     public String getAbout() {
