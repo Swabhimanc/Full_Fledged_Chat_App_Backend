@@ -2,7 +2,7 @@ package com.connecto.repositories;
 
 import com.connecto.enums.Status;
 import com.connecto.enums.Verdict;
-import com.connecto.model.VideoCall;
+import com.connecto.model.AudioCall;
 import com.google.cloud.firestore.*;
 import org.springframework.stereotype.Repository;
 
@@ -11,26 +11,26 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Repository
-public class VideoCallRepository {
-    private final CollectionReference videoCallRef;
+public class AudioCallRepository {
+    private final CollectionReference audioCallRef;
 
-    public VideoCallRepository(Firestore firestore) {
-        this.videoCallRef = firestore.collection("VideoCallMaster");
+    public AudioCallRepository(Firestore firestore) {
+        this.audioCallRef = firestore.collection("VideoCallMaster");
     }
 
-    public WriteResult createCallLog(VideoCall videoCall) throws ExecutionException, InterruptedException {
-        DocumentReference newVideoCallRef = videoCallRef.document();
-        videoCall.setId(newVideoCallRef.getId());
-        return newVideoCallRef.set(videoCall).get();
+    public WriteResult createCallLog(AudioCall audioCall) throws ExecutionException, InterruptedException {
+        DocumentReference newVideoCallRef = audioCallRef.document();
+        audioCall.setId(newVideoCallRef.getId());
+        return newVideoCallRef.set(audioCall).get();
     }
 
-    public void updateVideoCallState(String to, String from, Verdict verdict, Status status) throws ExecutionException, InterruptedException {
-        List<QueryDocumentSnapshot> doc1 = videoCallRef
+    public void updateAudioCallState(String to, String from, Verdict verdict, Status status) throws ExecutionException, InterruptedException {
+        List<QueryDocumentSnapshot> doc1 = audioCallRef
                 .whereEqualTo("participants",List.of(from,to))
                 .get()
                 .get()
                 .getDocuments();
-        List<QueryDocumentSnapshot> doc2 = videoCallRef
+        List<QueryDocumentSnapshot> doc2 = audioCallRef
                 .whereEqualTo("participants",List.of(from,to))
                 .get()
                 .get()
@@ -48,10 +48,8 @@ public class VideoCallRepository {
             }});
         }
     }
-
-    public List<QueryDocumentSnapshot> getVideoCallLogs(String userId) throws ExecutionException, InterruptedException {
-        List<QueryDocumentSnapshot> response = videoCallRef.whereArrayContains("participants",userId).get().get().getDocuments();
-
+    public List<QueryDocumentSnapshot> getAudioCallLogs(String userId) throws ExecutionException, InterruptedException {
+        List<QueryDocumentSnapshot> response = audioCallRef.whereArrayContains("participants",userId).get().get().getDocuments();
         return response;
     }
 }

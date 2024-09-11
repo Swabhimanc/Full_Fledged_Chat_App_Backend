@@ -29,7 +29,7 @@ public class VideoSocketController {
             String from = payload.get("from").toString();
             String to = payload.get("to").toString();
             String roomID = payload.get("roomID").toString();
-            Map<String, Object> response = videoCallService.startVideoCall(from, to, roomID);
+            Map<String, Object> response = videoCallService.startAudioCall(from, to, roomID);
             template.convertAndSendToUser(to, "/topic/video_call_notification", response);
         }
     }

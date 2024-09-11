@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 
 public class AudioCall {
+    private String id;
     private List<String> participants;
     private String from;
     private String to;
@@ -69,5 +70,13 @@ public class AudioCall {
 
     public void setEndedAt(Date endedAt) {
         this.endedAt = endedAt;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

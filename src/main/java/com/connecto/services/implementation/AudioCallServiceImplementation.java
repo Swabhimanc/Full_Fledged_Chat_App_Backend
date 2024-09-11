@@ -3,12 +3,13 @@ package com.connecto.services.implementation;
 import com.connecto.DTO.responseDTO.UserResponseDTO;
 import com.connecto.enums.Status;
 import com.connecto.enums.Verdict;
+import com.connecto.model.AudioCall;
 import com.connecto.model.VideoCall;
+import com.connecto.repositories.AudioCallRepository;
 import com.connecto.repositories.UserRepository;
-import com.connecto.repositories.VideoCallRepository;
+import com.connecto.services.AudioCallService;
 import com.connecto.services.VideoCallService;
 import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +19,14 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @Service
-public class VideoCallServiceImplementation implements VideoCallService {
+public class AudioCallServiceImplementation implements AudioCallService {
     private UserRepository userRepository;
-    private VideoCallRepository videoCallRepository;
+    private AudioCallRepository audioCallRepository;
 
     @Autowired
-    public VideoCallServiceImplementation(UserRepository userRepository, VideoCallRepository videoCallRepository) {
+    public AudioCallServiceImplementation(UserRepository userRepository, AudioCallRepository audioCallRepository) {
         this.userRepository = userRepository;
-        this.videoCallRepository = videoCallRepository;
+        this.audioCallRepository = audioCallRepository;
     }
 
     @Override
@@ -41,18 +42,18 @@ public class VideoCallServiceImplementation implements VideoCallService {
         }
 
         // Create a new VideoCall document
-        VideoCall videoCallLog = new VideoCall();
-        videoCallLog.setParticipants(List.of(from, to));
-        videoCallLog.setFrom(from);
-        videoCallLog.setTo(to);
-        videoCallLog.setStatus(Status.ONGOING);
+        AudioCall audioCallLog = new AudioCall();
+        audioCallLog.setParticipants(List.of(from, to));
+        audioCallLog.setFrom(from);
+        audioCallLog.setTo(to);
+        audioCallLog.setStatus(Status.ONGOING);
 
         // Save the video call in the database (assuming a VideoCallService exists)
-        videoCallRepository.createCallLog(videoCallLog);
+        audioCallRepository.createCallLog(audioCallLog);
 
         Map<String, Object> customResponse = new HashMap<>();
         customResponse.put("from", toUserRef.get().get().toObject(UserResponseDTO.class));
-        customResponse.put("roomID", videoCallLog.getId());
+        customResponse.put("roomID", audioCallLog.getId());
         customResponse.put("streamID", to);
         customResponse.put("userID", from);
         customResponse.put("userName", fromUserRef.get().get().get("firstName"));
@@ -79,6 +80,6 @@ public class VideoCallServiceImplementation implements VideoCallService {
 
     @Override
     public void updateCallRecord(String to, String from, Verdict verdict, Status status) throws ExecutionException, InterruptedException {
-        videoCallRepository.updateVideoCallState(to, from, verdict, status);
+        audioCallRepository.updateAudioCallState(to, from, verdict, status);
     }
 }

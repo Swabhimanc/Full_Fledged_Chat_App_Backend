@@ -6,7 +6,7 @@ import com.connecto.enums.Verdict;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public interface VideoCallService {
+public interface AudioCallService {
     Map<String, Object> startAudioCall(String from, String to) throws ExecutionException, InterruptedException;
 
     Map<String,Object> startAudioCall(String from, String to, String roomID) throws ExecutionException, InterruptedException;

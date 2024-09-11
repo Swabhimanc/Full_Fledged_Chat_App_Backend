@@ -85,4 +85,19 @@ public class UserController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @GetMapping("/get-call-logs")
+    public ResponseEntity<?> getCallLogs(HttpServletRequest request) {
+        try {
+            User fromUser = (User) request.getAttribute("user");
+            String userId = fromUser.getId();
+            Map<String, Object> response = userService.getCallLogs(userId);
+            if ((boolean) response.get("status")) {
+                return ResponseEntity.status(200).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }

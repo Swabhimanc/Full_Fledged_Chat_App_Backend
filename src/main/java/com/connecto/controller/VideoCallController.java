@@ -6,10 +6,7 @@ import com.connecto.utilities.TokenServerAssistant;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +23,7 @@ public class VideoCallController {
             User fromUser = (User) request.getAttribute("user");
             String from = fromUser.getId();
             String to = payload.get("to").toString();
-            Map<String, Object> response = videoCallService.startVideoCall(from, to);
+            Map<String, Object> response = videoCallService.startAudioCall(from, to);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
@@ -38,7 +35,7 @@ public class VideoCallController {
 
     @PostMapping("/generate-zego-token")
     public ResponseEntity<?> generateZegoToken(@RequestBody Map<String, Object> payload, HttpServletRequest request) throws Exception {
-//        try {
+        try {
         String userId = payload.get("userId").toString();
         String room_id = payload.get("room_id").toString();
         String payloadObject = "{" +
@@ -55,8 +52,9 @@ public class VideoCallController {
             put("message", "Token Generated Successfully");
             put("token", token);
         }});
-//        } catch (Exception e) {
-//            return ResponseEntity.status(500).body(e.getMessage());
-//        }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
+
 }
