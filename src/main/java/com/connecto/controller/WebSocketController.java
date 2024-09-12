@@ -137,6 +137,35 @@ public class WebSocketController {
             put("message",message);
         }});
     }
+    @MessageMapping("/media_message")
+    public void mediaMessages(@org.jetbrains.annotations.NotNull @Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        String conversation_id = payload.get("conversation_id").toString();
+        String to = payload.get("to").toString();
+        String from = payload.get("from").toString();
+        String type = payload.get("type").toString();
+        String msg = payload.get("message").toString();
+        String media = payload.get("media").toString();
+        String mediaType = payload.get("mediaType").toString();
+
+
+        Message message = new Message()
+                .setFrom(from)
+                .setTo(to)
+                .setText(msg)
+                .setMedia(media)
+                .setMediaType(mediaType)
+                .setType(MessageType.valueOf(type));
+
+        messageService.addMessage(conversation_id, message);
+        template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
+            put("conversation_id", conversation_id);
+            put("message", message);
+        }});
+        template.convertAndSendToUser(from,"/topic/new_message",new HashMap<>(){{
+            put("conversation_id",conversation_id);
+            put("message",message);
+        }});
+    }
 
     @MessageMapping("/file_message")
     public void fileMessages(@Payload Map<String, Object> message, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {

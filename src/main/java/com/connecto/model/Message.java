@@ -10,6 +10,26 @@ public class Message {
     private MessageType type;
     private Date createdAt = new Date();
     private String text;
+    private String media;
+    private String mediaType;
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public Message setMediaType(String mediaType) {
+        this.mediaType = mediaType;
+        return this;
+    }
+
+    public String getMedia() {
+        return media;
+    }
+
+    public Message setMedia(String media) {
+        this.media = media;
+        return this;
+    }
 
     public String getText() {
         return text;

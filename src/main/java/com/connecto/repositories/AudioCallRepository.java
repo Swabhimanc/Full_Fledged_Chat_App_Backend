@@ -15,7 +15,7 @@ public class AudioCallRepository {
     private final CollectionReference audioCallRef;
 
     public AudioCallRepository(Firestore firestore) {
-        this.audioCallRef = firestore.collection("VideoCallMaster");
+        this.audioCallRef = firestore.collection("AudioCallMaster");
     }
 
     public WriteResult createCallLog(AudioCall audioCall) throws ExecutionException, InterruptedException {

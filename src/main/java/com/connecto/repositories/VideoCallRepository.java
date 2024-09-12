@@ -51,7 +51,6 @@ public class VideoCallRepository {
 
     public List<QueryDocumentSnapshot> getVideoCallLogs(String userId) throws ExecutionException, InterruptedException {
         List<QueryDocumentSnapshot> response = videoCallRef.whereArrayContains("participants",userId).get().get().getDocuments();
-
         return response;
     }
 }
