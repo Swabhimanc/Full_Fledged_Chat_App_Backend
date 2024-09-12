@@ -14,6 +14,7 @@ import com.connecto.repositories.FriendRequestRepository;
 import com.connecto.repositories.UserRepository;
 import com.connecto.repositories.VideoCallRepository;
 import com.connecto.services.UserService;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -231,6 +232,16 @@ public class UserServiceImplementation implements UserService {
             put("status",true);
             put("message","Call Logs Fetched Successfully");
             put("data",response);
+        }};
+    }
+
+    @Override
+    public Map<String, Object> getUserProfile(String userId) throws ExecutionException, InterruptedException {
+        UserResponseDTO user = userRepository.findUserById(userId).toObject(UserResponseDTO.class);
+        return new HashMap<>(){{
+            put("status",true);
+            put("message","User details fetched successfully");
+            put("user",user);
         }};
     }
 }

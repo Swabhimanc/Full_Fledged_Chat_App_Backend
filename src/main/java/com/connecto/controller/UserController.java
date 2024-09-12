@@ -34,6 +34,23 @@ public class UserController {
         }
     }
 
+    @GetMapping("/get-me")
+    public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
+        try {
+            User user = (User) request.getAttribute("user");
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            Map<String, Object> response = userService.getUserProfile(user.getId());
+            if ((boolean) response.get("status")) {
+                return ResponseEntity.status(200).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/get-friends")
     public ResponseEntity<?> getFriends(HttpServletRequest request) {
         try {
