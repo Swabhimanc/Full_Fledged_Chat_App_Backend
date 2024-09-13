@@ -116,7 +116,7 @@ public class WebSocketController {
     }
 
     @MessageMapping("/text_message")
-    public void textMessages(@org.jetbrains.annotations.NotNull @Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void textMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         String conversation_id = payload.get("conversation_id").toString();
         String to = payload.get("to").toString();
         String from = payload.get("from").toString();
@@ -140,7 +140,7 @@ public class WebSocketController {
         }});
     }
     @MessageMapping("/media_message")
-    public void mediaMessages(@org.jetbrains.annotations.NotNull @Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void mediaMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         String conversation_id = payload.get("conversation_id").toString();
         String to = payload.get("to").toString();
         String from = payload.get("from").toString();
