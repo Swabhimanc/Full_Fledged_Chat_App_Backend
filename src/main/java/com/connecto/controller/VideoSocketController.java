@@ -3,6 +3,7 @@ package com.connecto.controller;
 import com.connecto.enums.Status;
 import com.connecto.enums.Verdict;
 import com.connecto.services.VideoCallService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -29,7 +30,7 @@ public class VideoSocketController {
             String from = payload.get("from").toString();
             String to = payload.get("to").toString();
             String roomID = payload.get("roomID").toString();
-            Map<String, Object> response = videoCallService.startAudioCall(from, to, roomID);
+            Map<String, Object> response = videoCallService.startVideoCall(from, to, roomID);
             template.convertAndSendToUser(to, "/topic/video_call_notification", response);
         }
     }
@@ -45,27 +46,27 @@ public class VideoSocketController {
     }
 
     @MessageMapping("/video_call_accepted")
-    public void handleVideoCallAccepted(@Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
+    public void handleVideoCallAccepted(@NotNull @Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
         if(!payload.isEmpty()) {
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
+            String from = payload.get("streamID").toString();
+            String to = payload.get("userID").toString();
             videoCallService.updateCallRecord(to, from, Verdict.ACCEPTED, null);
             template.convertAndSendToUser(from, "/topic/video_call_accepted", payload);
         }
     }
 
     @MessageMapping("/video_call_denied")
-    public void handleVideoCallDenied(@Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
+    public void handleVideoCallDenied(@NotNull @Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
         if(!payload.isEmpty()) {
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
+            String from = payload.get("streamID").toString();
+            String to = payload.get("userID").toString();
             videoCallService.updateCallRecord(to, from, Verdict.DENIED, Status.ENDED);
             template.convertAndSendToUser(from, "/topic/video_call_denied", payload);
         }
     }
 
     @MessageMapping("/user_is_busy_video_call")
-    public void handleUserIsBusyVideoCall(@Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
+    public void handleUserIsBusyVideoCall(@NotNull @Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
         if(!payload.isEmpty()){
             String from = payload.get("from").toString();
             String to = payload.get("to").toString();

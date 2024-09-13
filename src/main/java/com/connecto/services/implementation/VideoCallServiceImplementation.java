@@ -8,7 +8,6 @@ import com.connecto.repositories.UserRepository;
 import com.connecto.repositories.VideoCallRepository;
 import com.connecto.services.VideoCallService;
 import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +28,7 @@ public class VideoCallServiceImplementation implements VideoCallService {
     }
 
     @Override
-    public Map<String, Object> startAudioCall(String from, String to) throws ExecutionException, InterruptedException {
+    public Map<String, Object> startVideoCall(String from, String to) throws ExecutionException, InterruptedException {
         // Fetching user details
         DocumentReference fromUserRef = userRepository.findUserReferenceById(from);
         DocumentReference toUserRef = userRepository.findUserReferenceById(to);
@@ -65,15 +64,20 @@ public class VideoCallServiceImplementation implements VideoCallService {
     }
 
     @Override
-    public Map<String, Object> startAudioCall(String from, String to, String roomID) throws ExecutionException, InterruptedException {
+    public Map<String, Object> startVideoCall(String from, String to, String roomID) throws ExecutionException, InterruptedException {
         UserResponseDTO fromUser = userRepository.findUserById(from).toObject(UserResponseDTO.class);
         UserResponseDTO toUser = userRepository.findUserById(to).toObject(UserResponseDTO.class);
-        return new HashMap<>() {{
+        Map<String, Object> customResponse = new HashMap<>() {{
             put("from", fromUser);
             put("roomID", roomID);
             put("streamID", from);
             put("userID", to);
             put("userName", toUser.getFirstName());
+        }};
+
+        return new HashMap<>() {{
+            put("status", true);          // Respond with 'to' user details
+            put("data", customResponse);
         }};
     }
 

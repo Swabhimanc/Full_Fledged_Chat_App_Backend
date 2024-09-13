@@ -23,7 +23,7 @@ public class VideoCallController {
             User fromUser = (User) request.getAttribute("user");
             String from = fromUser.getId();
             String to = payload.get("to").toString();
-            Map<String, Object> response = videoCallService.startAudioCall(from, to);
+            Map<String, Object> response = videoCallService.startVideoCall(from, to);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
