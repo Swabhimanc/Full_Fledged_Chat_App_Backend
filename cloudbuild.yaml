@@ -1,6 +1,6 @@
 steps:
   # Step 1: Build the Maven project
-  - name: 'maven:3.6-jdk-11'
+  - name: 'maven:4.0-jdk-17'
     entrypoint: 'sh'
     args:
       - '-c'
