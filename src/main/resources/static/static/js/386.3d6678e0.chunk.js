@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkchat=self.webpackChunkchat||[]).push([[386],{1386:(t,e,n)=>{n.d(e,{uK:()=>r,xH:()=>u});var a=n(31121);function r(t){return(0,a.GP)(new Date(t),"dd MMM yyyy HH:mm")}function u(t){const e=new Date(t),n=new Date(e.getTime());return`${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`}}}]);
-//# sourceMappingURL=386.3d6678e0.chunk.js.map
