@@ -3,9 +3,14 @@ package com.connecto.configs;
 import com.google.cloud.secretmanager.v1beta2.AccessSecretVersionResponse;
 import com.google.cloud.secretmanager.v1beta2.SecretManagerServiceClient;
 import com.google.cloud.secretmanager.v1beta2.SecretVersionName;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration
 public class SecretManager {
-    public static String getServiceKey() {
+
+    @Bean
+    public String getServiceKey() {
         String projectId = "396305485425";
         String secretId = "Firestore-Secret";
         String versionId = "1"; // or specific version number
@@ -16,9 +21,7 @@ public class SecretManager {
             AccessSecretVersionResponse response = client.accessSecretVersion(secretVersionName);
 
             // Print the secret payload
-            String secret = response.getPayload().getData().toStringUtf8();
-            System.out.println("Secret: " + secret);
-            return secret;
+            return response.getPayload().getData().toStringUtf8();
         } catch (Exception e) {
             e.printStackTrace();
         }
