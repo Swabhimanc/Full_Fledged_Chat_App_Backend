@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-alpine
 WORKDIR /app
 
 # Copy the application JAR file to the working directory
-COPY /src/main/resources/Secrets/service-key.json /app/src/main/resources/Secrets/service-key.json
+#COPY /src/main/resources/Secrets/service-key.json /app/src/main/resources/Secrets/service-key.json
 COPY target/*.jar /app/app.jar
 
 # Expose the port on which the application runs
