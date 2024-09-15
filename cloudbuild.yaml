@@ -34,6 +34,8 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--service-account'
+      - 'lead-editor@beaming-age-431614-v4.iam.gserviceaccount.com'
 
 images:
   - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
