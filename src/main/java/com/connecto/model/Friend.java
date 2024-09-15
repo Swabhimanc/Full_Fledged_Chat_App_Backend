@@ -1,7 +1,9 @@
 package com.connecto.model;
 
 import com.connecto.enums.Status;
+import com.google.cloud.firestore.annotation.IgnoreExtraProperties;
 
+@IgnoreExtraProperties
 public class Friend {
     private String id;
     private String firstName;

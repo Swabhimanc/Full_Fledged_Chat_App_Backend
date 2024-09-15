@@ -2,10 +2,12 @@ package com.connecto.DTO.responseDTO;
 
 import com.connecto.enums.Status;
 import com.connecto.enums.Verdict;
+import com.google.cloud.firestore.annotation.IgnoreExtraProperties;
 
 import java.util.Date;
 import java.util.List;
 
+@IgnoreExtraProperties
 public class AudioCallResponseDTO {
     private String id;
     private List<String> participants;

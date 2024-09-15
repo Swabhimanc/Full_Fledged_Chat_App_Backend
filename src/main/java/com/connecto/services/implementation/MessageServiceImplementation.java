@@ -111,6 +111,7 @@ public class MessageServiceImplementation implements MessageService {
         });
         return new HashMap<>() {{
             put("status", true);
+            put("message", "Direct Conversations Fetched Successfully");
             put("data", response);
         }};
     }

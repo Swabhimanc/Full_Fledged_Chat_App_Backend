@@ -1,5 +1,8 @@
 package com.connecto.DTO.responseDTO;
 
+import com.google.cloud.firestore.annotation.IgnoreExtraProperties;
+
+@IgnoreExtraProperties
 public class FriendsResponseDTO {
     private String id;
     private String firstName;

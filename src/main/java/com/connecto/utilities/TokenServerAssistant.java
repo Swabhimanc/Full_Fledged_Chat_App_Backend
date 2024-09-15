@@ -168,7 +168,7 @@ public class TokenServerAssistant {
         json.put("nonce", nonce);
         json.put("payload", payload);
         String content = json.toString();
-        System.out.println("current nonce: " + nonce);
+//        System.out.println("current nonce: " + nonce);
 
         try {
             debugInfo("encrypt content ...");

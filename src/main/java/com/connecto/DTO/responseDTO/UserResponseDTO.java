@@ -2,9 +2,9 @@ package com.connecto.DTO.responseDTO;
 
 import com.connecto.enums.Status;
 import com.connecto.model.User;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.cloud.firestore.annotation.IgnoreExtraProperties;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@IgnoreExtraProperties
 public class UserResponseDTO {
     private String id;
     private String firstName;

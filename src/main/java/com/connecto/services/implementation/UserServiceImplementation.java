@@ -183,10 +183,13 @@ public class UserServiceImplementation implements UserService {
                     put("id",entry.getId());
                     put("img",otherUser.getAvatar());
                     put("name",otherUser.getFirstName());
+                    put("friend_id",otherUser.getId());
                     put("online",otherUser.getStatus()==Status.ONLINE);
                     put("incoming",false);
                     put("missed",missed);
                     put("type","video");
+                    put("startedAt",entry.getStartedAt());
+                    put("endedAt",entry.getEndedAt());
                 }});
             }else {
                 UserResponseDTO otherUser = entry.getFrom();
@@ -194,10 +197,13 @@ public class UserServiceImplementation implements UserService {
                     put("id",entry.getId());
                     put("img",otherUser.getAvatar());
                     put("name",otherUser.getFirstName());
+                    put("friend_id",otherUser.getId());
                     put("online",otherUser.getStatus()==Status.ONLINE);
                     put("incoming",true);
                     put("missed",missed);
                     put("type","video");
+                    put("startedAt",entry.getStartedAt());
+                    put("endedAt",entry.getEndedAt());
                 }});
             }
         }
@@ -210,10 +216,13 @@ public class UserServiceImplementation implements UserService {
                     put("id",entry.getId());
                     put("img",otherUser.getAvatar());
                     put("name",otherUser.getFirstName());
+                    put("friend_id",otherUser.getId());
                     put("online",otherUser.getStatus()==Status.ONLINE);
                     put("incoming",false);
                     put("missed",missed);
                     put("type","audio");
+                    put("startedAt",entry.getStartedAt());
+                    put("endedAt",entry.getEndedAt());
                 }});
             }else {
                 UserResponseDTO otherUser = entry.getFrom();
@@ -221,10 +230,13 @@ public class UserServiceImplementation implements UserService {
                     put("id",entry.getId());
                     put("img",otherUser.getAvatar());
                     put("name",otherUser.getFirstName());
+                    put("friend_id",otherUser.getId());
                     put("online",otherUser.getStatus()==Status.ONLINE);
                     put("incoming",true);
                     put("missed",missed);
                     put("type","audio");
+                    put("startedAt",entry.getStartedAt());
+                    put("endedAt",entry.getEndedAt());
                 }});
             }
         }

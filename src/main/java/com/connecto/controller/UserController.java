@@ -1,6 +1,7 @@
 package com.connecto.controller;
 
 import com.connecto.model.User;
+import com.connecto.services.MessageService;
 import com.connecto.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    MessageService messageService;
 
     @GetMapping("/get-users")
     public ResponseEntity<?> getAllUsers(HttpServletRequest request) {
@@ -109,6 +112,21 @@ public class UserController {
             User fromUser = (User) request.getAttribute("user");
             String userId = fromUser.getId();
             Map<String, Object> response = userService.getCallLogs(userId);
+            if ((boolean) response.get("status")) {
+                return ResponseEntity.status(200).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-direct-conversations")
+    public ResponseEntity<?> getDirectConversations(HttpServletRequest request){
+        try {
+            User fromUser = (User) request.getAttribute("user");
+            String userId = fromUser.getId();
+            Map<String, Object> response = messageService.allDirectConversations(userId);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }

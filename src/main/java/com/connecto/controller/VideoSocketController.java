@@ -67,8 +67,8 @@ public class VideoSocketController {
     @MessageMapping("/user_is_busy_video_call")
     public void handleUserIsBusyVideoCall(@Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
         if(!payload.isEmpty()){
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
+            String from = payload.get("streamID").toString();
+            String to = payload.get("userId").toString();
             videoCallService.updateCallRecord(to, from, Verdict.BUSY, Status.ENDED);
             template.convertAndSendToUser(from, "/topic/on_another_video_call", payload);
         }
