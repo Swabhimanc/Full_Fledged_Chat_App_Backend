@@ -1,6 +1,6 @@
 steps:
   # Step 1: Build the Maven project
-  - name: 'microsoft-openjdk-17-ubuntu'
+  - name: 'maven: 3.9.9'
     entrypoint: 'sh'
     args:
       - '-c'
