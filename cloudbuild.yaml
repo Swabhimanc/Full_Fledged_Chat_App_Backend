@@ -1,0 +1,42 @@
+steps:
+  # Step 1: Build the Maven project
+  - name: 'maven:3.6-jdk-11'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - './mvnw clean package'
+
+  # Step 2: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
+      - '.'
+
+  # Step 3: Push the Docker image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
+
+  # Step 4: Deploy the Docker image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'full-fledged-chat-app-backend'  # Ensure this is the correct Cloud Run service name
+      - '--image'
+      - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
+      - '--region'
+      - 'asia-south1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
