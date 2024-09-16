@@ -21,11 +21,16 @@ public class FirebaseConfig {
 
     @Bean
     public Firestore firestore() throws IOException {
-        String serviceAccountKey = secretManager.getServiceKey();
 
 //        FileInputStream serviceAccount = new FileInputStream(System.getProperty("user.dir")+"/src/main/resources/Secrets/service-key.json");
+//        FirebaseOptions options = new FirebaseOptions.Builder()
+//                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+//                .build();
+
+        String serviceAccountKey = secretManager.getServiceKey();
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(serviceAccountKey.getBytes()));
         FirebaseOptions options = new FirebaseOptions.Builder()
-                .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(serviceAccountKey.getBytes())))
+                .setCredentials(credentials)
                 .build();
 
         FirebaseApp.initializeApp(options);

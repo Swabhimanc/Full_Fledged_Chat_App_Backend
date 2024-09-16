@@ -69,12 +69,17 @@ public class AudioCallServiceImplementation implements AudioCallService {
     public Map<String, Object> startAudioCall(String from, String to, String roomID) throws ExecutionException, InterruptedException {
         UserResponseDTO fromUser = userRepository.findUserById(from).toObject(UserResponseDTO.class);
         UserResponseDTO toUser = userRepository.findUserById(to).toObject(UserResponseDTO.class);
-        return new HashMap<>() {{
+        Map<String, Object> customResponse = new HashMap<>() {{
             put("from", fromUser);
             put("roomID", roomID);
             put("streamID", from);
             put("userID", to);
             put("userName", toUser.getFirstName());
+        }};
+
+        return new HashMap<>() {{
+            put("status", true);          // Respond with 'to' user details
+            put("data", customResponse);
         }};
     }
 

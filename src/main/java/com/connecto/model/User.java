@@ -2,10 +2,12 @@ package com.connecto.model;
 
 
 import com.connecto.enums.Status;
+import com.google.cloud.firestore.annotation.IgnoreExtraProperties;
 
 import java.util.*;
 import java.util.regex.Pattern;
 
+@IgnoreExtraProperties
 public class User {
     private String id;
     private String firstName;
