@@ -3,6 +3,7 @@ package com.connecto.controller;
 import com.connecto.DTO.responseDTO.UserResponseDTO;
 import com.connecto.model.Avatar;
 import com.connecto.services.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.mail.EmailException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +23,9 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Object object) {
+    public ResponseEntity<?> register(@RequestBody Map<String,Object> request) {
         try {
-            Map<String, Object> response = authService.register(object);
+            Map<String, Object> response = authService.register(request);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
@@ -35,9 +36,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Object object) {
+    public ResponseEntity<?> login(@RequestBody Map<String,Object> request) {
         try {
-            Map<String, Object> response = authService.login(object);
+            Map<String, Object> response = authService.login(request);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
@@ -94,9 +95,10 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Object object) {
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String,Object> request, HttpServletRequest httpServletRequest) {
         try {
-            Map<String,Object> response = authService.forgotPassword(object);
+            String URL = httpServletRequest.getHeader("Origin");
+            Map<String,Object> response = authService.forgotPassword(request,URL);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }

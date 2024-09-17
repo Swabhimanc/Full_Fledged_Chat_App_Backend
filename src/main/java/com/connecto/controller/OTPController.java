@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -27,8 +28,12 @@ public class OTPController {
     @PostMapping("/verify")
     public ResponseEntity<?> verifyOtp(@RequestBody Object object) {
         try {
-            Object response = otpService.verifyOtp(object);
-            return ResponseEntity.status(200).body(response);
+            Map<String,Object> response = otpService.verifyOtp(object);
+            if((boolean)response.get("status")){
+                return ResponseEntity.status(200).body(response);
+            }else {
+                return ResponseEntity.status(403).body(response);
+            }
         } catch (EmailException | ExecutionException | InterruptedException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }

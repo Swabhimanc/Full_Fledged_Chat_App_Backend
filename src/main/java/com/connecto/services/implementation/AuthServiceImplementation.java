@@ -41,8 +41,7 @@ public class AuthServiceImplementation implements AuthService {
     }
 
     @Override
-    public Map<String, Object> register(Object object) throws ExecutionException, InterruptedException, EmailException, IOException {
-        Map<String, Object> reqObj = (Map<String, Object>) object;
+    public Map<String, Object> register(Map<String, Object> reqObj) throws ExecutionException, InterruptedException, EmailException, IOException {
         reqObj.replace("password", passwordEncoder.encode(reqObj.get("password").toString()));
 
         // Email check logic...
@@ -83,8 +82,7 @@ public class AuthServiceImplementation implements AuthService {
     }
 
     @Override
-    public Map<String, Object> login(Object object) throws ExecutionException, InterruptedException {
-        Map<String, Object> reqObject = (Map<String, Object>) object;
+    public Map<String, Object> login(Map<String, Object> reqObject) throws ExecutionException, InterruptedException {
         String requestEmail = reqObject.get("email").toString();
         String requestPassword = reqObject.get("password").toString();
 
@@ -92,14 +90,21 @@ public class AuthServiceImplementation implements AuthService {
 
         User user = userSnapshot.isEmpty() ? null : userSnapshot.getDocuments().get(0).toObject(User.class);
         if (user != null && passwordEncoder.matches(requestPassword, user.getPassword())) {
-            UserResponseDTO userResponseDTO = new UserResponseDTO(user);
-            return new HashMap<>() {{
-                put("status", true);
-                put("message", "User logged in successfully");
-                put("token", jwtUtil.generateToken(user.getId(), new HashMap<>()));
-                put("user_id",user.getId());
-                put("user",userResponseDTO);
-            }};
+            if (user.isVerified()) {
+                UserResponseDTO userResponseDTO = new UserResponseDTO(user);
+                return new HashMap<>() {{
+                    put("status", true);
+                    put("message", "User logged in successfully");
+                    put("token", jwtUtil.generateToken(user.getId(), new HashMap<>()));
+                    put("user_id", user.getId());
+                    put("user", userResponseDTO);
+                }};
+            } else {
+                return new HashMap<>() {{
+                    put("status", false);
+                    put("message", "User is not Verified. Please Complete verification.");
+                }};
+            }
         } else {
             return new HashMap<>() {{
                 put("status", false);
@@ -150,8 +155,7 @@ public class AuthServiceImplementation implements AuthService {
     }
 
     @Override
-    public Map<String, Object> forgotPassword(Object object) throws ExecutionException, InterruptedException {
-        Map<String, Object> request = (Map<String, Object>) object;
+    public Map<String, Object> forgotPassword(Map<String, Object> request,String URL) throws ExecutionException, InterruptedException {
         String requestEmail = request.get("email").toString();
         QuerySnapshot userSnapshot = userRepository.findUserByEmail(requestEmail);
         if (userSnapshot.isEmpty()) {
@@ -166,7 +170,7 @@ public class AuthServiceImplementation implements AuthService {
             put("passwordResetToken", resetToken);
             put("passwordResetExpires", new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10)));
         }});
-        String resetUrl = String.format("http://localhost:3000/auth/new-password/?token=%s", resetToken);
+        String resetUrl = String.format(URL+"/auth/new-password/?token=%s", resetToken);
         try {
             EmailService.sendResetLink(userSnapshot.getDocuments().get(0).getData().get("firstName").toString(), requestEmail, resetUrl);
         } catch (Exception e) {
