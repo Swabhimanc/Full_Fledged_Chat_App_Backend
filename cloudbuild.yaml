@@ -5,6 +5,7 @@ steps:
     args:
       - '-c'
       - './mvnw clean package'
+    dir: '/Full_Fledged_Chat_App_Backend'
 
   # Step 2: Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
