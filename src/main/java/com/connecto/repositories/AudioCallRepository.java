@@ -19,9 +19,9 @@ public class AudioCallRepository {
     }
 
     public WriteResult createCallLog(AudioCall audioCall) throws ExecutionException, InterruptedException {
-        DocumentReference newVideoCallRef = audioCallRef.document();
-        audioCall.setId(newVideoCallRef.getId());
-        return newVideoCallRef.set(audioCall).get();
+        DocumentReference newAudioCallRef = audioCallRef.document();
+        audioCall.setId(newAudioCallRef.getId());
+        return newAudioCallRef.set(audioCall).get();
     }
 
     public void updateAudioCallState(String to, String from, Verdict verdict, Status status) throws ExecutionException, InterruptedException {
