@@ -38,16 +38,6 @@ public class WebSocketController {
         this.template = template;
     }
 
-    @MessageMapping("/send-message")
-    public void sendMessage(@Payload Message message, SimpMessageHeaderAccessor headerAccessor) {
-        template.convertAndSendToUser("", "/topic/message-receive/" + message.getTo(), message);
-    }
-
-    @MessageMapping("/add-user")//app/add-user
-    public String addUser(@Payload String userId, SimpMessageHeaderAccessor headerAccessor) {
-        return "...";
-    }
-
     @MessageMapping("/send_friend_request")
     public void newFriendRequest(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) headerAccessor.getSessionAttributes().get("user");
@@ -80,11 +70,10 @@ public class WebSocketController {
     }
 
     @MessageMapping("/end")
-    public void connectionEnd(SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void connectionEnd(@Payload Map<String, Object> request,SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) headerAccessor.getSessionAttributes().get("user");
         try {
             userService.setUserStatus(user.getId(), Status.OFFLINE);
-            template.convertAndSend("/topic/request-accepted", "");
         } catch (Exception e) {
 
         }

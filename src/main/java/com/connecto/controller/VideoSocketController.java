@@ -54,6 +54,16 @@ public class VideoSocketController {
         }
     }
 
+    @MessageMapping("/end_video_call")
+    public void handleAudioCallEnd(@Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
+        if(!payload.isEmpty()) {
+            String from = payload.get("streamID").toString();
+            String to = payload.get("userID").toString();
+            videoCallService.updateCallRecord(to, from, Verdict.ACCEPTED, null);
+            template.convertAndSendToUser(from, "/topic/end_video_call", payload);
+        }
+    }   
+
     @MessageMapping("/video_call_denied")
     public void handleVideoCallDenied( @Payload Map<String, Object> payload) throws ExecutionException, InterruptedException {
         if(!payload.isEmpty()) {

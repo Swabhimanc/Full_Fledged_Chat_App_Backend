@@ -46,7 +46,7 @@ public class EmailService {
         email.send();
 
         // Log the OTP
-        System.out.println("OTP: " + OTP);
+//        System.out.println("OTP: " + OTP);
 
         return OTP;
     }

@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkchat=self.webpackChunkchat||[]).push([[237],{28237:(e,r,a)=>{a.r(r),a.d(r,{default:()=>l});var d=a(65043),c=a(76398),t=(0,c.rule)({d:"block",ov:"hidden",w:"100%",bd:"1px solid #E5E9F2",bdrad:"6px","& iframe":{d:"block",ov:"hidden",bd:0,w:"100%",h:"450px",bdrad:"8px"}});const l=function(e){var r=e.url;return(0,e.renderWrap)(d.createElement("div",{className:t},d.createElement("iframe",{src:"https://www.figma.com/embed?embed_host=share&url=".concat(encodeURIComponent(r)),allowFullScreen:!0})))}}}]);
+//# sourceMappingURL=237.8edb2fcc.chunk.js.map

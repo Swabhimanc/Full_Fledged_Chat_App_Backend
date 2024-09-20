@@ -219,7 +219,7 @@ public class AuthServiceImplementation implements AuthService {
             put("password", passwordEncoder.encode(password));
         }});
 
-//        EmailService.sendResetConfirmation(user.getEmail().toString());
+        EmailService.sendResetConfirmation(user.getEmail());
         return new HashMap<>() {{
             put("status", true);
             put("message", "Password reset successfully");
