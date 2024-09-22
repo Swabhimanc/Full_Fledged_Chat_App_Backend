@@ -3,11 +3,22 @@ package com.connecto.model;
 import com.connecto.DTO.responseDTO.UserResponseDTO;
 
 import java.util.List;
+import java.util.Map;
 
 public class OneToOneMessage {
     private String id;
     private List<UserResponseDTO> participants;
     private List<Message> messages;
+    private Map<String,Long> unreadCounts;
+
+    public Map<String, Long> getUnreadCounts() {
+        return unreadCounts;
+    }
+
+    public OneToOneMessage setUnreadCounts(Map<String, Long> unreadCounts) {
+        this.unreadCounts = unreadCounts;
+        return this;
+    }
 
     public String getId() {
         return id;

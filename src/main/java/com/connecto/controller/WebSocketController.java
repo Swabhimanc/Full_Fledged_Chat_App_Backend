@@ -70,7 +70,7 @@ public class WebSocketController {
     }
 
     @MessageMapping("/end")
-    public void connectionEnd(@Payload Map<String, Object> request,SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void connectionEnd(@Payload Map<String, Object> request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) headerAccessor.getSessionAttributes().get("user");
         try {
             userService.setUserStatus(user.getId(), Status.OFFLINE);
@@ -107,8 +107,8 @@ public class WebSocketController {
     @MessageMapping("/text_message")
     public void textMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         String conversation_id = payload.get("conversation_id").toString();
-        String to = payload.get("to").toString();
         String from = payload.get("from").toString();
+        String to = payload.get("to").toString();
         String type = payload.get("type").toString();
         String msg = payload.get("message").toString();
 
@@ -128,6 +128,7 @@ public class WebSocketController {
             put("message", message);
         }});
     }
+
     @MessageMapping("/media_message")
     public void mediaMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         String conversation_id = payload.get("conversation_id").toString();
@@ -160,5 +161,12 @@ public class WebSocketController {
 
     @MessageMapping("/file_message")
     public void fileMessages(@Payload Map<String, Object> message, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    }
+
+    @MessageMapping("/read_messages")
+    public void readMessages(@Payload Map<String,Object>payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        String from = payload.get("user_id").toString();
+        String conversation_id = payload.get("room_id").toString();
+        messageService.resetUnreadCount(from,conversation_id);
     }
 }

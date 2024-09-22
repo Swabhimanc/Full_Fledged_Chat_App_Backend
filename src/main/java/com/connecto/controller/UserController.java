@@ -18,7 +18,7 @@ public class UserController {
     @Autowired
     private UserService userService;
     @Autowired
-    MessageService messageService;
+    private MessageService messageService;
 
     @GetMapping("/get-users")
     public ResponseEntity<?> getAllUsers(HttpServletRequest request) {
@@ -96,7 +96,7 @@ public class UserController {
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorised");
             }
-            Map<String, Object> response = userService.updateUserProfile(user.getId(),object);
+            Map<String, Object> response = userService.updateUserProfile(user.getId(), object);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
@@ -122,7 +122,7 @@ public class UserController {
     }
 
     @GetMapping("/get-direct-conversations")
-    public ResponseEntity<?> getDirectConversations(HttpServletRequest request){
+    public ResponseEntity<?> getDirectConversations(HttpServletRequest request) {
         try {
             User fromUser = (User) request.getAttribute("user");
             String userId = fromUser.getId();

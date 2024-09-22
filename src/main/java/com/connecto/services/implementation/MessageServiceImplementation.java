@@ -7,7 +7,6 @@ import com.connecto.repositories.MessageRepository;
 import com.connecto.repositories.OneToOneMessageRepository;
 import com.connecto.repositories.UserRepository;
 import com.connecto.services.MessageService;
-import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,7 @@ public class MessageServiceImplementation implements MessageService {
     }
 
     public void addMessage(String conversation_id, Message message) throws ExecutionException, InterruptedException {
-        oneToOneMessageRepository.addMessageToConversation(conversation_id,message);
+        oneToOneMessageRepository.addMessageToConversation(conversation_id, message);
     }
 
     public List<Map<?, ?>> getAllMessages(String from, String to) throws ExecutionException, InterruptedException {
@@ -98,16 +97,20 @@ public class MessageServiceImplementation implements MessageService {
         result.forEach(doc -> {
             List<UserResponseDTO> participants = new ArrayList<>();
             ((List<DocumentReference>) doc.get("participants")).forEach(el -> {
-                if (!el.getId().equals(userRef.getId())) {
-                    try {
-                        participants.add(el.get().get().toObject(UserResponseDTO.class));
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new RuntimeException(e);
-                    }
+//                if (!el.getId().equals(userRef.getId())) {
+                try {
+                    participants.add(el.get().get().toObject(UserResponseDTO.class));
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
                 }
+//                }
             });
             List<Message> messages = (List<Message>) doc.get("messages");
-            response.add(new OneToOneMessage().setMessages(messages).setId(doc.getId()).setParticipants(participants));
+            response.add(new OneToOneMessage()
+                    .setMessages(messages)
+                    .setId(doc.getId())
+                    .setParticipants(participants)
+                    .setUnreadCounts((Map<String, Long>) doc.get("unreadCounts")));
         });
         return new HashMap<>() {{
             put("status", true);
@@ -127,7 +130,7 @@ public class MessageServiceImplementation implements MessageService {
         if (result.isEmpty()) {
             WriteResult writeResult = oneToOneMessageRepository.createDirectConversation(fromRef, toRef);
             chatExists = false;
-            if (writeResult==null) {
+            if (writeResult == null) {
                 return new HashMap<>() {{
                     put("status", false);
                     put("message", "Failed to fetch Conversation");
@@ -153,7 +156,7 @@ public class MessageServiceImplementation implements MessageService {
         final boolean finalChatExists = chatExists;
         return new HashMap<>() {{
             put("status", true);
-            put("message", finalChatExists ?"Conversation fetched successfully":"New chat created successfully");
+            put("message", finalChatExists ? "Conversation fetched successfully" : "New chat created successfully");
             put("data", oneToOneMessage);
         }};
     }
@@ -162,9 +165,19 @@ public class MessageServiceImplementation implements MessageService {
     public List<Message> getOneToOneMessages(String id) throws ExecutionException, InterruptedException {
         DocumentReference messageRef = oneToOneMessageRepository.getConversationById(id);
         List<Message> messages = (List<Message>) messageRef.get().get().get("messages");
-        if(messages!=null){
+        if (messages != null) {
             return messages;
         }
         return new ArrayList<>();
+    }
+
+    @Override
+    public void resetUnreadCount(String from, String conversationId) throws ExecutionException, InterruptedException {
+        DocumentReference messageRef = oneToOneMessageRepository.getConversationById(conversationId);
+        Map<String,Integer> unreadCounts = (Map<String, Integer>) messageRef.get().get().get("unreadCounts");
+        if(unreadCounts!=null){
+            unreadCounts.put(from, 0);
+        }
+        messageRef.update("unreadCounts",unreadCounts);
     }
 }
