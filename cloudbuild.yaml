@@ -38,8 +38,6 @@ steps:
       - 'lead-editor@beaming-age-431614-v4.iam.gserviceaccount.com'
       - '--memory'
       - '1Gi'
-      - '--traffic'
-      - '100' 
 
 images:
   - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
