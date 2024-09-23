@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -19,14 +20,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic","/user");
+        config.enableSimpleBroker("/topic", "/user")
+                .setHeartbeatValue(new long[]{15000, 20000})
+                .setTaskScheduler(new ConcurrentTaskScheduler());
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-//                .setAllowedOrigins("http://localhost:3000","https://connecto-396305485425.asia-south1.run.app")
+                .setAllowedOrigins("http://localhost:3000", "https://connecto-396305485425.asia-south1.run.app")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
