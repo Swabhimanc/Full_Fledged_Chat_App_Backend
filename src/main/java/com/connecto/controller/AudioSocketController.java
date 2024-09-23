@@ -49,7 +49,7 @@ public class AudioSocketController {
         if(!payload.isEmpty()) {
             String from = payload.get("streamID").toString();
             String to = payload.get("userID").toString();
-            audioCallService.updateCallRecord(to, from, Verdict.ACCEPTED, null);
+            audioCallService.updateCallRecord(to, from, Verdict.ACCEPTED, Status.ONGOING);
             template.convertAndSendToUser(from, "/topic/audio_call_accepted", payload);
         }
     }
@@ -59,7 +59,7 @@ public class AudioSocketController {
         if(!payload.isEmpty()) {
             String from = payload.get("streamID").toString();
             String to = payload.get("userID").toString();
-            audioCallService.updateCallRecord(to, from, Verdict.ACCEPTED, null);
+            audioCallService.updateCallRecord(to, from, Verdict.ACCEPTED, Status.ENDED);
             template.convertAndSendToUser(from, "/topic/end_audio_call", payload);
         }
     }

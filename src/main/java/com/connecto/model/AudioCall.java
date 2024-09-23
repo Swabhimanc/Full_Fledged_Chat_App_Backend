@@ -13,7 +13,7 @@ public class AudioCall {
     private String to;
     private Verdict verdict;
     private Status status;
-    private Date startedAt;
+    private Date startedAt = new Date();
     private Date endedAt;
 
     public List<String> getParticipants() {

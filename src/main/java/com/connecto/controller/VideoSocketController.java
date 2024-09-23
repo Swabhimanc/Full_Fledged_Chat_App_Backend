@@ -49,7 +49,7 @@ public class VideoSocketController {
         if(!payload.isEmpty()) {
             String from = payload.get("streamID").toString();
             String to = payload.get("userID").toString();
-            videoCallService.updateCallRecord(to, from, Verdict.ACCEPTED, null);
+            videoCallService.updateCallRecord(to, from, Verdict.ACCEPTED, Status.ONGOING);
             template.convertAndSendToUser(from, "/topic/video_call_accepted", payload);
         }
     }
@@ -59,7 +59,7 @@ public class VideoSocketController {
         if(!payload.isEmpty()) {
             String from = payload.get("streamID").toString();
             String to = payload.get("userID").toString();
-            videoCallService.updateCallRecord(to, from, Verdict.ACCEPTED, null);
+            videoCallService.updateCallRecord(to, from, Verdict.ACCEPTED, Status.ENDED);
             template.convertAndSendToUser(from, "/topic/end_video_call", payload);
         }
     }   
