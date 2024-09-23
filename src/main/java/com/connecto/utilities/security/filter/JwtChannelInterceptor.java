@@ -31,18 +31,30 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
-                String userId = jwtUtil.extractUserId(token);
-                if (token != null && jwtUtil.validateToken(token, userId)) {
-                    CustomUserDetails userDetails = authServiceImplementation.loadUserByUserId(userId);
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    accessor.getSessionAttributes().put("user", userDetails.getUser());
+                try {
+                    String userId = jwtUtil.extractUserId(token);
+                    if (token != null && jwtUtil.validateToken(token, userId)) {
+                        CustomUserDetails userDetails = authServiceImplementation.loadUserByUserId(userId);
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        accessor.getSessionAttributes().put("user", userDetails.getUser());
+                        // Log successful connection
+//                        System.out.println("WebSocket connected successfully for user: " + userDetails.getUsername());
+                    } else {
+                        System.out.println("Invalid JWT token");
+                        throw new IllegalStateException("Invalid JWT token");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error processing WebSocket connection: " + e.getMessage());
+                    throw new IllegalStateException("WebSocket connection failed due to token validation error", e);
                 }
             } else {
+                System.out.println("Missing or invalid Authorization header");
                 throw new IllegalStateException("Missing or invalid Authorization header");
             }
         }
         return message;
     }
+
 }
