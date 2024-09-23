@@ -21,11 +21,11 @@ public class CloudStorageConfig {
     @Bean
     public Storage googleCloudStorage() throws IOException {
 
-        FileInputStream serviceAccount = new FileInputStream(System.getProperty("user.dir")+"/src/main/resources/Secrets/service-key.json");
-        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+//        FileInputStream serviceAccount = new FileInputStream(System.getProperty("user.dir")+"/src/main/resources/Secrets/service-key.json");
+//        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
 
-//        String serviceAccountKey = secretManager.getServiceKey();
-//        GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(serviceAccountKey.getBytes()));
+        String serviceAccountKey = secretManager.getServiceKey();
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(serviceAccountKey.getBytes()));
 
         return StorageOptions.newBuilder()
                 .setCredentials(credentials)
