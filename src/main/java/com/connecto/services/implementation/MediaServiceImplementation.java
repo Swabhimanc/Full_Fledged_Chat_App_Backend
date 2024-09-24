@@ -9,18 +9,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 
 @Service
 public class MediaServiceImplementation implements MediaService {
-    private final String bucketName = "connecto-media-storage";
+    private final String bucketName = System.getenv("BUCKET_NAME");
     @Autowired
     Storage storage;
 
     @Override
-    public String uploadFile(MultipartFile file) throws IOException {
+    public String uploadFile(MultipartFile file) throws IOException, URISyntaxException {
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Bucket bucket = storage.get(bucketName);
         if (bucket == null) {
@@ -31,9 +35,12 @@ public class MediaServiceImplementation implements MediaService {
                 .build();
 
         storage.create(blobInfo, file.getBytes());
-        URL signedUrl = storage.signUrl(blobInfo, 6, TimeUnit.DAYS, Storage.SignUrlOption.withV4Signature());
 
-        return signedUrl.toString();
+//        URL signedUrl = storage.signUrl(blobInfo, 6, TimeUnit.DAYS, Storage.SignUrlOption.withV4Signature());
+//        return signedUrl.toString();
+
+        URI publicUri = new URI("https", "storage.googleapis.com", "/" + bucketName + "/" + fileName, null);
+        return publicUri.toString();
     }
 
     @Override
