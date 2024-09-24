@@ -11,6 +11,11 @@ public class SecretManager {
 
     @Bean
     public String getServiceKey() {
+        /*This is the code that uses SecretManager API for retrieval of secrets.
+        But when Secrets are set using ENV variable in project directly the
+        below method are used*/
+
+
         /*String projectId = System.getenv("PROJECT_ID");
         String secretId = System.getenv("FIRESTORE_SECRET");
         String versionId = "1"; // or specific version number
@@ -26,12 +31,10 @@ public class SecretManager {
             e.printStackTrace();
         }
         return null;*/
-        String firestoreSecret = System.getenv("FIRESTORE_SECRET");
-
+        String firestoreSecret = System.getenv("FIRESTORE_SECRET")==null?"":System.getenv("FIRESTORE_SECRET");
         if (firestoreSecret == null) {
             throw new RuntimeException("FIRESTORE_SECRET environment variable is not set.");
         }
-        // Return the secret (it is already retrieved and available as an environment variable)
         return firestoreSecret;
     }
 }
