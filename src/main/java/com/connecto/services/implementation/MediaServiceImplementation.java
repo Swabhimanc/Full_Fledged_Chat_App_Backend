@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class MediaServiceImplementation implements MediaService {
-    private final String bucketName = System.getenv("BUCKET_NAME");
+    private final String bucketName = "connecto-media-storage";
     @Autowired
     Storage storage;
 
