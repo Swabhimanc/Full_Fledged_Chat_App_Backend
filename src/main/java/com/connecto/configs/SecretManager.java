@@ -12,9 +12,11 @@ public class SecretManager {
     @Bean
     public String getServiceKey() {
         String projectId = "396305485425";
-        String secretId = "Firestore-Secret";
+      //  String secretId = "Firestore-Secret";
         String versionId = "1"; // or specific version number
-
+        System.out.println( System.getenv());
+        String secretId = System.getenv("FIRESTORE_SECRET");
+        System.out.println(secretId);
         try (SecretManagerServiceClient client = SecretManagerServiceClient.create()) {
             // Access the secret version
             SecretVersionName secretVersionName = SecretVersionName.of(projectId, secretId, versionId);
