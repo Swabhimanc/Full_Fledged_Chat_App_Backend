@@ -2,6 +2,7 @@ package com.connecto.model;
 
 import com.connecto.DTO.responseDTO.UserResponseDTO;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,16 @@ public class OneToOneMessage {
     private List<UserResponseDTO> participants;
     private List<Message> messages;
     private Map<String,Long> unreadCounts;
+    private Date createdAt;
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public OneToOneMessage setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+        return this;
+    }
 
     public Map<String, Long> getUnreadCounts() {
         return unreadCounts;

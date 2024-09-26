@@ -2,9 +2,13 @@ package com.connecto.model;
 
 import com.connecto.enums.MessageType;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 public class Message {
+    private String id = UUID.randomUUID().toString();
     private String to;
     private String from;
     private MessageType type;
@@ -12,6 +16,25 @@ public class Message {
     private String text;
     private String media;
     private String mediaType;
+    private List<String> deletedBy = new ArrayList<>();
+
+    public List<String> getDeletedBy() {
+        return deletedBy;
+    }
+
+    public Message setDeletedBy(List<String> deletedBy) {
+        this.deletedBy = deletedBy;
+        return this;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public Message setId(String id) {
+        this.id = id;
+        return this;
+    }
 
     public String getMediaType() {
         return mediaType;

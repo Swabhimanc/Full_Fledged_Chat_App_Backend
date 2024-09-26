@@ -7,13 +7,17 @@ import com.connecto.repositories.MessageRepository;
 import com.connecto.repositories.OneToOneMessageRepository;
 import com.connecto.repositories.UserRepository;
 import com.connecto.services.MessageService;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class MessageServiceImplementation implements MessageService {
@@ -150,7 +154,8 @@ public class MessageServiceImplementation implements MessageService {
             List<Message> messages = (List<Message>) doc.get("messages");
             oneToOneMessage.setMessages(messages)
                     .setId(doc.getId())
-                    .setParticipants(participants);
+                    .setParticipants(participants)
+                    .setCreatedAt(((Timestamp) doc.get("createdAt")).toDate());
         });
 
         final boolean finalChatExists = chatExists;
@@ -174,10 +179,60 @@ public class MessageServiceImplementation implements MessageService {
     @Override
     public void resetUnreadCount(String from, String conversationId) throws ExecutionException, InterruptedException {
         DocumentReference messageRef = oneToOneMessageRepository.getConversationById(conversationId);
-        Map<String,Integer> unreadCounts = (Map<String, Integer>) messageRef.get().get().get("unreadCounts");
-        if(unreadCounts!=null){
+        Map<String, Integer> unreadCounts = (Map<String, Integer>) messageRef.get().get().get("unreadCounts");
+        if (unreadCounts != null) {
             unreadCounts.put(from, 0);
         }
-        messageRef.update("unreadCounts",unreadCounts);
+        messageRef.update("unreadCounts", unreadCounts);
+    }
+
+    @Override
+    public CompletableFuture<HashMap<String, Object>> deleteMessage(String conversationId, String messageId, String userId) throws ExecutionException, InterruptedException {
+        DocumentReference messageRef = oneToOneMessageRepository.getConversationById(conversationId);
+        ApiFuture<DocumentSnapshot> future = messageRef.get();
+        AtomicBoolean deleted= new AtomicBoolean(false);
+        CompletableFuture<HashMap<String, Object>> asyncProcess = CompletableFuture.supplyAsync(() -> {
+            try {
+                DocumentSnapshot document = future.get();
+                List<Map<String, Object>> messages = (List<Map<String, Object>>) document.get("messages");
+                for (Map<String, Object> message : messages) {
+                    if (message.get("id").equals(messageId)) {
+                        List<String> deletedBy = (List<String>) message.get("deletedBy");
+                        if(!deletedBy.contains(userId)){
+                            deletedBy.add(userId);
+                            deleted.set(true);
+                        }
+                        return messages;
+                    }
+                }
+                if(!deleted.get()){
+                    throw new RuntimeException("Message Not Found");
+                }
+                return messages;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).thenComposeAsync(messages -> {
+            ApiFuture<WriteResult> writeFuture = messageRef.update("messages", messages);
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return writeFuture.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }).thenApplyAsync(result -> {
+            HashMap<String, Object> response = new HashMap<>();
+            response.put("status", true);
+            response.put("message", "Messages deleted successfully");
+            return response;
+        }).exceptionally(e -> {
+            HashMap<String, Object> response = new HashMap<>();
+            response.put("status", false);
+            response.put("message", "Error occurred: " + e.getMessage());
+            return response;
+        });
+//        asyncProcess.join();
+        return asyncProcess;
     }
 }

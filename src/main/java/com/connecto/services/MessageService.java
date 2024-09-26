@@ -3,8 +3,10 @@ package com.connecto.services;
 
 import com.connecto.model.Message;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public interface MessageService {
@@ -22,4 +24,6 @@ public interface MessageService {
     List<Message> getOneToOneMessages(String id) throws ExecutionException, InterruptedException;
 
     void resetUnreadCount(String from, String conversationId) throws ExecutionException, InterruptedException;
+
+    CompletableFuture<HashMap<String, Object>> deleteMessage(String conversationId, String messageId, String userId) throws ExecutionException, InterruptedException;
 }

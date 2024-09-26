@@ -97,6 +97,7 @@ public class WebSocketController {
         template.convertAndSendToUser(user.getId(), "/topic/start_conversation", response);
     }
 
+    //Not In Use
     @MessageMapping("/get_messages")
     public void getMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
@@ -139,7 +140,6 @@ public class WebSocketController {
         String media = payload.get("media").toString();
         String mediaType = payload.get("mediaType").toString();
 
-
         Message message = new Message()
                 .setFrom(from)
                 .setTo(to)
@@ -164,9 +164,26 @@ public class WebSocketController {
     }
 
     @MessageMapping("/read_messages")
-    public void readMessages(@Payload Map<String,Object>payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+    public void readMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
         String from = payload.get("user_id").toString();
         String conversation_id = payload.get("room_id").toString();
-        messageService.resetUnreadCount(from,conversation_id);
+        messageService.resetUnreadCount(from, conversation_id);
+    }
+
+    @MessageMapping("/delete_message")
+    public void deleteMessage(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
+        try {
+            String message_id = payload.get("id") == null ? "" : payload.get("id").toString();
+            String conversation_id = payload.get("room_id") == null ? "" : payload.get("room_id").toString();
+            String user_id = payload.get("user_id") == null ? "" : payload.get("user_id").toString();
+            HashMap<String,Object> response = messageService.deleteMessage(conversation_id, message_id, user_id).get();
+            template.convertAndSendToUser(user.getId(), "/topic/delete_message", response);
+        } catch (Exception e) {
+            template.convertAndSendToUser(user.getId(), "/topic/delete_message", new HashMap<>() {{
+                put("status", false);
+                put("message", e.getMessage());
+            }});
+        }
     }
 }

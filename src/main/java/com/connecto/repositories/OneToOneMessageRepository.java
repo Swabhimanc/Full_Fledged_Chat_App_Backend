@@ -1,12 +1,15 @@
 package com.connecto.repositories;
 
 import com.connecto.model.Message;
+import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 
@@ -48,6 +51,7 @@ public class OneToOneMessageRepository {
             put("id", messageRef.getId());
             put("participants", List.of(from, to));
             put("messages", List.of());
+            put("createdAt", new Date());
             put("unreadCounts", new HashMap<>(){{
                 put(from.getId(),0);
                 put(to.getId(),0);
