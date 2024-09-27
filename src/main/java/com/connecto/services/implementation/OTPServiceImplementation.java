@@ -43,7 +43,6 @@ public class OTPServiceImplementation implements OTPService {
     public Map<String, Object> generateOtp(User user) throws EmailException, ExecutionException, InterruptedException, IOException {
 
         final String OTP = passwordEncoder.encode(EmailService.sendOTP(user.getFirstName(),user.getEmail()));
-//        System.out.println(OTP);
         UserResponseDTO updatedUser = userRepository.updateUser(user.getId(),new HashMap<>(){{
             put("otp",OTP);
             put("otpExpiry",new Date(System.currentTimeMillis()+ Duration.ofMinutes(10).toMillis()));
@@ -57,52 +56,6 @@ public class OTPServiceImplementation implements OTPService {
             return new HashMap<>() {{
                 put("status", false);
                 put("message", "Something went wrong");
-            }};
-        }
-    }
-
-    @Override
-    public Map<String, Object> verifyOtp(Object object) throws ExecutionException, InterruptedException {
-        Map<String,Object> request = (Map<String, Object>)object;
-        String requestOtp = request.get("otp").toString();
-        String requestEmail = request.get("email").toString();
-
-        QuerySnapshot usersSnapshot = userRepository.findUserByEmail(requestEmail);
-
-        // Check if the OTP exists
-        if (usersSnapshot.isEmpty()) {
-            return new HashMap<>() {{
-                put("status", false);
-                put("message", "Something went wrong");
-            }};
-        }
-        // OTP validation logic...
-        DocumentSnapshot userSnapshot = usersSnapshot.getDocuments().get(0);
-        Timestamp validTill = userSnapshot.get("otpExpiry", Timestamp.class);
-        Timestamp now = Timestamp.now();
-        if (!passwordEncoder.matches(requestOtp, (String)userSnapshot.get("otp"))) {
-            return new HashMap<>() {{
-                put("status", false);
-                put("message", "Incorrect OTP entered");
-            }};
-        } else if (validTill!=null && validTill.compareTo(now) <= 0) {
-            return new HashMap<>() {{
-                put("status", false);
-                put("message", "OTP Expired.");
-            }};
-        }
-        else {
-            userRepository.updateUser(userSnapshot.getId(),new HashMap<>(){{
-                put("verified",true);
-                put("otp",null);
-                put("otpExpiry",null);
-            }});
-            return new HashMap<>(){{
-                put("status", true);
-                put("message", "OTP Verified Successfully.");
-                put("token",jwtUtil.generateToken(userSnapshot.getId(),new HashMap<>()));
-                put("user_id",userSnapshot.getId());
-
             }};
         }
     }

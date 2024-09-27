@@ -57,9 +57,8 @@ public class AuthServiceImplementation implements AuthService {
                 }};
             } else {
                 // Email exists but is not verified, update the existing user
-                user.updateFields(reqObj); // Assume this method updates the user's fields with the new data
+                user.updateFields(reqObj);
                 userRepository.updateUser(user.getId(), reqObj);
-
                 // Generate and send OTP
                 return otpService.generateOtp(user);
             }
@@ -74,7 +73,6 @@ public class AuthServiceImplementation implements AuthService {
                     put("message", errors);
                 }};
             }
-
             userRepository.saveUser(user);
             // Generate and send OTP
             return otpService.generateOtp(user);
@@ -211,7 +209,7 @@ public class AuthServiceImplementation implements AuthService {
             }};
         }
         User user = userSnapshot.getDocuments().get(0).toObject(User.class);
-        userRepository.updateUser(user.getId(), new HashMap<>() {{
+        UserResponseDTO userResponseDTO = userRepository.updateUser(user.getId(), new HashMap<>() {{
             put("passwordResetToken", null);
             put("passwordResetExpires", null);
             ;
@@ -225,17 +223,54 @@ public class AuthServiceImplementation implements AuthService {
             put("message", "Password reset successfully");
             put("token", jwtUtil.generateToken(user.getId(), new HashMap<>()));
             put("user_id", user.getId());
+            put("user", userResponseDTO);
         }};
     }
 
-    public Object updateProfile(String userId, Object object) throws ExecutionException, InterruptedException {
-        UserResponseDTO updatedUser = userRepository.updateUser(userId, (Map<String, Object>) object);
+    @Override
+    public Map<String, Object> verifyOtp(Object object) throws ExecutionException, InterruptedException {
+        Map<String,Object> request = (Map<String, Object>)object;
+        String requestOtp = request.get("otp").toString();
+        String requestEmail = request.get("email").toString();
 
-        return new HashMap<>() {{
-            put("status", true);
-            put("message", "Profile updated successfully");
-            put("user", updatedUser);
-        }};
+        QuerySnapshot usersSnapshot = userRepository.findUserByEmail(requestEmail);
+
+        // Check if the OTP exists
+        if (usersSnapshot.isEmpty()) {
+            return new HashMap<>() {{
+                put("status", false);
+                put("message", "Something went wrong");
+            }};
+        }
+        // OTP validation logic...
+        DocumentSnapshot userSnapshot = usersSnapshot.getDocuments().get(0);
+        Timestamp validTill = userSnapshot.get("otpExpiry", Timestamp.class);
+        Timestamp now = Timestamp.now();
+        if (!passwordEncoder.matches(requestOtp, (String)userSnapshot.get("otp"))) {
+            return new HashMap<>() {{
+                put("status", false);
+                put("message", "Incorrect OTP entered");
+            }};
+        } else if (validTill!=null && validTill.compareTo(now) <= 0) {
+            return new HashMap<>() {{
+                put("status", false);
+                put("message", "OTP Expired.");
+            }};
+        }
+        else {
+            UserResponseDTO userResponseDTO = userRepository.updateUser(userSnapshot.getId(),new HashMap<>(){{
+                put("verified",true);
+                put("otp",null);
+                put("otpExpiry",null);
+            }});
+            return new HashMap<>(){{
+                put("status", true);
+                put("message", "OTP Verified Successfully.");
+                put("token",jwtUtil.generateToken(userSnapshot.getId(),new HashMap<>()));
+                put("user_id",userSnapshot.getId());
+                put("user",userResponseDTO);
+            }};
+        }
     }
 }
 //TODO Add status for new messages,

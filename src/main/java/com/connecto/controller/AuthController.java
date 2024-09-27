@@ -22,19 +22,6 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String,Object> request) {
-        try {
-            Map<String, Object> response = authService.register(request);
-            if ((boolean) response.get("status")) {
-                return ResponseEntity.status(200).body(response);
-            }
-            return ResponseEntity.status(400).body(response);
-        } catch (ExecutionException | InterruptedException | EmailException | IOException e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String,Object> request) {
         try {
@@ -44,6 +31,33 @@ public class AuthController {
             }
             return ResponseEntity.status(400).body(response);
         } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/logout/{id}")
+    public ResponseEntity<?> logout(@PathVariable String id, @RequestHeader("Authorization") String token) {
+        try {
+            authService.logout(id);
+            return ResponseEntity.status(200).body(new HashMap<>() {{
+                put("status", true);
+                put("message", "User logged out successfully");
+            }});
+        } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String,Object> request, HttpServletRequest httpServletRequest) {
+        try {
+            String URL = httpServletRequest.getHeader("Origin");
+            Map<String,Object> response = authService.forgotPassword(request,URL);
+            if ((boolean) response.get("status")) {
+                return ResponseEntity.status(200).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (ExecutionException | InterruptedException | EmailException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
@@ -61,14 +75,28 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/logout/{id}")
-    public ResponseEntity<?> logout(@PathVariable String id, @RequestHeader("Authorization") String token) {
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String,Object> request) {
         try {
-            authService.logout(id);
-            return ResponseEntity.status(200).body(new HashMap<>() {{
-                put("status", true);
-                put("message", "User logged out successfully");
-            }});
+            Map<String, Object> response = authService.register(request);
+            if ((boolean) response.get("status")) {
+                return ResponseEntity.status(200).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (ExecutionException | InterruptedException | EmailException | IOException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyOtp(@RequestBody Object object) {
+        try {
+            Map<String,Object> response = authService.verifyOtp(object);
+            if((boolean)response.get("status")){
+                return ResponseEntity.status(200).body(response);
+            }else {
+                return ResponseEntity.status(403).body(response);
+            }
         } catch (ExecutionException | InterruptedException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
@@ -90,20 +118,6 @@ public class AuthController {
             List<UserResponseDTO> users = authService.getAllUsers(id);
             return ResponseEntity.ok(users);
         } catch (ExecutionException | InterruptedException e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String,Object> request, HttpServletRequest httpServletRequest) {
-        try {
-            String URL = httpServletRequest.getHeader("Origin");
-            Map<String,Object> response = authService.forgotPassword(request,URL);
-            if ((boolean) response.get("status")) {
-                return ResponseEntity.status(200).body(response);
-            }
-            return ResponseEntity.status(400).body(response);
-        } catch (ExecutionException | InterruptedException | EmailException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }

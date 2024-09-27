@@ -88,9 +88,6 @@ public class UserController {
 
     @PostMapping("/update-me")
     public ResponseEntity<?> updateUserProfile(@RequestBody Map<String, Object> object, HttpServletRequest request) {
-        //firstName: user?.firstName,
-        //    about: user?.about,
-        //    avatar: ``,
         try {
             User user = (User) request.getAttribute("user");
             if (user == null) {

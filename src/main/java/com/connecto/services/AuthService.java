@@ -24,4 +24,6 @@ public interface AuthService {
     Map<String,Object> forgotPassword(Map<String,Object> object,String URL) throws ExecutionException, InterruptedException, EmailException;
 
     Map<String, Object> resetPassword(Object object) throws ExecutionException, InterruptedException, EmailException;
+
+    Map<String, Object> verifyOtp(Object object) throws ExecutionException, InterruptedException;
 }

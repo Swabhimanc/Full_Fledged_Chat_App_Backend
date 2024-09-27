@@ -9,6 +9,4 @@ import java.util.concurrent.ExecutionException;
 
 public interface OTPService {
     Map<String, Object> generateOtp(User user) throws EmailException, ExecutionException, InterruptedException, IOException;
-
-    Map<String, Object> verifyOtp(Object object) throws EmailException, ExecutionException, InterruptedException;
 }
