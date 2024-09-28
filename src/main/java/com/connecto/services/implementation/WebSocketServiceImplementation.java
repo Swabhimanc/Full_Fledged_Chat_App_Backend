@@ -27,13 +27,14 @@ public class WebSocketServiceImplementation implements WebSocketService {
     @Override
     public Map<String, Object> acceptFriendRequest(Map<String, Object> request) throws ExecutionException, InterruptedException {
         try {
-            FriendRequest friendRequest = friendRequestRepository.getFriendRequestById(request.get("request_id").toString());
-
-            //TODO Add a friends object in the senderFriends and recipientFriends
+            String sender = request.get("sender_id").toString();
+            String recipient = request.get("recipient_id").toString();
+            FriendRequest friendRequest = friendRequestRepository.getFriendRequestBySenderAndRecipient(sender,recipient);
 
             userRepository.updateUser(friendRequest.getSender(), "friends", FieldValue.arrayUnion(friendRequest.getRecipient()));
             userRepository.updateUser(friendRequest.getRecipient(), "friends", FieldValue.arrayUnion(friendRequest.getSender()));
-            userRepository.updateUser(friendRequest.getRecipient(), "friendRequests", FieldValue.arrayRemove(friendRequest.getId()));
+            userRepository.updateUser(friendRequest.getRecipient(), "friendRequestsReceived", FieldValue.arrayRemove(friendRequest.getSender()));
+            userRepository.updateUser(friendRequest.getSender(), "friendRequestsSent", FieldValue.arrayRemove(friendRequest.getRecipient()));
             friendRequestRepository.deleteFriendRequest(friendRequest.getId());
 
             return new HashMap<>() {{
@@ -54,5 +55,42 @@ public class WebSocketServiceImplementation implements WebSocketService {
         friendRequest.setSender(from);
         friendRequest.setRecipient(to);
         return friendRequestRepository.addNewFriendRequest(friendRequest);
+    }
+
+    @Override
+    public Map<String, Object> deleteFriendRequest(String from, String to) throws ExecutionException, InterruptedException {
+        FriendRequest friendRequest = friendRequestRepository.getFriendRequestBySenderAndRecipient(from,to);
+        if(friendRequest==null){
+            return new HashMap<>(){{
+               put("status",false);
+               put("message","No Requests Found");
+            }};
+        }
+        userRepository.updateUser(friendRequest.getRecipient(), "friendRequestsReceived", FieldValue.arrayRemove(friendRequest.getSender()));
+        userRepository.updateUser(friendRequest.getSender(), "friendRequestsSent", FieldValue.arrayRemove(friendRequest.getRecipient()));
+        friendRequestRepository.deleteFriendRequest(friendRequest.getId());
+        return new HashMap<>(){{
+            put("status",true);
+            put("message","Friend Request Cancelled");
+        }};
+    }
+
+    @Override
+    public Map<String, Object> removeFriend(Map<String, Object> request) throws ExecutionException, InterruptedException {
+        try{
+            String user_id = request.get("from").toString();
+            String friend_id = request.get("to").toString();
+            userRepository.updateUser(user_id,"friends",FieldValue.arrayRemove(friend_id));
+            userRepository.updateUser(friend_id,"friends",FieldValue.arrayRemove(user_id));
+            return new HashMap<>(){{
+                put("status",true);
+                put("message","Friend Removed Successfully");
+            }};
+        } catch (Exception e) {
+            return new HashMap<>(){{
+                put("status",true);
+                put("message",e.getMessage());
+            }};
+        }
     }
 }

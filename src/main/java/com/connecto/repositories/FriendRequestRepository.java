@@ -26,14 +26,14 @@ public class FriendRequestRepository {
     }
 
     public List<Map<String,Object>> getAllRequests(User user) throws ExecutionException, InterruptedException {
-        List<String> friendRequests = user.getFriendRequests();
+        List<String> friendRequests = user.getFriendRequestsReceived();
         if (friendRequests==null || friendRequests.isEmpty()){
             return new ArrayList<>();
         }
         List<Map<String,Object>> response = new ArrayList<>();
         friendRequests.forEach(el -> {
             try {
-                FriendRequest requestDoc = friendRequestRef.document(el.toString()).get().get().toObject(FriendRequest.class);
+                FriendRequest requestDoc = getFriendRequestBySenderAndRecipient(el,user.getId());
                 DocumentSnapshot sender = usersRef.document(requestDoc.getSender()).get().get();
                 response.add(new HashMap<>(){{
                     put("id",requestDoc.getId());
@@ -56,7 +56,6 @@ public class FriendRequestRepository {
 
     public Map<String, Object> addNewFriendRequest(FriendRequest friendRequest) {
         try {
-            //Check if Friend request already exists
             QuerySnapshot existingRequest = friendRequestRef
                     .whereIn("sender", List.of(friendRequest.getSender(), friendRequest.getRecipient()))
                     .whereIn("recipient", List.of(friendRequest.getSender(), friendRequest.getRecipient()))
@@ -80,8 +79,11 @@ public class FriendRequestRepository {
             friendRequest.setId(friendRequestReference.getId());
             friendRequestReference.set(friendRequest);
             //Update the user and add the new Request to their pending requests
-            DocumentReference userReference = usersRef.document(friendRequest.getRecipient());
-            userReference.update("friendRequests", FieldValue.arrayUnion(friendRequest.getId()));
+            DocumentReference recipientReference = usersRef.document(friendRequest.getRecipient());
+            recipientReference.update("friendRequestsReceived", FieldValue.arrayUnion(friendRequest.getSender()));
+
+            DocumentReference senderReference = usersRef.document(friendRequest.getSender());
+            senderReference.update("friendRequestsSent", FieldValue.arrayUnion(friendRequest.getRecipient()));
             return new HashMap<>() {{
                 put("status", "success");
                 put("message", "Request sent successfully");
@@ -96,5 +98,16 @@ public class FriendRequestRepository {
 
     public FriendRequest getFriendRequestById(String id) throws ExecutionException, InterruptedException {
         return friendRequestRef.document(id).get().get().toObject(FriendRequest.class);
+    }
+
+    public FriendRequest getFriendRequestBySenderAndRecipient(String from, String to) throws ExecutionException, InterruptedException {
+        QuerySnapshot existingRequest = friendRequestRef
+                .whereIn("sender", List.of(from, to))
+                .whereIn("recipient", List.of(from,to))
+                .get().get();
+        if(!existingRequest.isEmpty()){
+            return existingRequest.getDocuments().get(0).toObject(FriendRequest.class);
+        }
+        return null;
     }
 }

@@ -14,7 +14,6 @@ import com.connecto.repositories.FriendRequestRepository;
 import com.connecto.repositories.UserRepository;
 import com.connecto.repositories.VideoCallRepository;
 import com.connecto.services.UserService;
-import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class UserServiceImplementation implements UserService {
     private AudioCallRepository audioCallRepository;
 
     @Autowired
-    public UserServiceImplementation(UserRepository userRepository,AudioCallRepository audioCallRepository, VideoCallRepository videoCallRepository, FriendRequestRepository friendRequestRepository) {
+    public UserServiceImplementation(UserRepository userRepository, AudioCallRepository audioCallRepository, VideoCallRepository videoCallRepository, FriendRequestRepository friendRequestRepository) {
         this.userRepository = userRepository;
         this.friendRequestRepository = friendRequestRepository;
         this.videoCallRepository = videoCallRepository;
@@ -43,12 +42,18 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public Map<String, Object> getAllUsers(User user) throws ExecutionException, InterruptedException {
-        List<UserResponseDTO> response = new ArrayList<>();
+        List<String> requestsSent = user.getFriendRequestsSent();
+        List<String> requestsReceived = user.getFriendRequestsReceived();
+        List<Map<String, Object>> response = new ArrayList<>();
         List<QueryDocumentSnapshot> usersSnapshot = userRepository.getAllUsers();
         usersSnapshot.forEach(doc -> {
             if (user.getFriends() == null || !user.getFriends().contains(doc.getId()) && !doc.getId().equals(user.getId())) {
                 UserResponseDTO userResponseDTO = doc.toObject(UserResponseDTO.class);
-                response.add(userResponseDTO);
+                response.add(new HashMap<>() {{
+                    put("requestSent", requestsSent.contains(userResponseDTO.getId()));
+                    put("requestReceived", requestsReceived.contains(userResponseDTO.getId()));
+                    put("user", userResponseDTO);
+                }});
             }
         });
         return new HashMap<>() {{
@@ -90,44 +95,44 @@ public class UserServiceImplementation implements UserService {
     public Map<String, Object> getFriends(User user) throws ExecutionException, InterruptedException {
         List<String> friends = user.getFriends();
         List<Friend> response = new ArrayList<>();
-        if(friends!=null){
-            for(String id : friends){
+        if (friends != null) {
+            for (String id : friends) {
                 response.add(userRepository.findUserById(id).toObject(Friend.class));
             }
-            return new HashMap<>(){{
-                put("status",true);
-                put("data",response);
+            return new HashMap<>() {{
+                put("status", true);
+                put("data", response);
             }};
         }
-        return new HashMap<>(){{
-            put("status",false);
-            put("data",new ArrayList<>());
+        return new HashMap<>() {{
+            put("status", false);
+            put("data", new ArrayList<>());
         }};
     }
 
     @Override
     public Map<String, Object> updateUserProfile(String id, Map<String, Object> object) throws ExecutionException, InterruptedException {
-        try{
-            UserResponseDTO user = userRepository.updateUser(id,object);
-            return new HashMap<>(){{
-                put("status",true);
-                put("message","User updated successfully");
-                put("user",user);
+        try {
+            UserResponseDTO user = userRepository.updateUser(id, object);
+            return new HashMap<>() {{
+                put("status", true);
+                put("message", "User updated successfully");
+                put("user", user);
             }};
         } catch (Exception e) {
-            return new HashMap<>(){{
-                put("status",false);
-                put("message","Something went wrong");
+            return new HashMap<>() {{
+                put("status", false);
+                put("message", "Something went wrong");
             }};
         }
     }
 
     @Override
     public Map<String, Object> getCallLogs(String userId) throws ExecutionException, InterruptedException {
-        List<Map<String,Object>> response = new ArrayList<>();
+        List<Map<String, Object>> response = new ArrayList<>();
 
-        List<QueryDocumentSnapshot>videoCallLogs = videoCallRepository.getVideoCallLogs(userId);
-        List<QueryDocumentSnapshot>audioCallLogs = audioCallRepository.getAudioCallLogs(userId);
+        List<QueryDocumentSnapshot> videoCallLogs = videoCallRepository.getVideoCallLogs(userId);
+        List<QueryDocumentSnapshot> audioCallLogs = audioCallRepository.getAudioCallLogs(userId);
 
         List<VideoCallResponseDTO> videoCalls = new ArrayList<>();
         List<AudioCallResponseDTO> audioCalls = new ArrayList<>();
@@ -175,85 +180,85 @@ public class UserServiceImplementation implements UserService {
             }
         });
 
-        for(VideoCallResponseDTO entry : videoCalls){
-            boolean missed = entry.getVerdict()!=(Verdict.ACCEPTED);
-            if(entry.getFrom().getId().equals(userId)){
+        for (VideoCallResponseDTO entry : videoCalls) {
+            boolean missed = entry.getVerdict() != (Verdict.ACCEPTED);
+            if (entry.getFrom().getId().equals(userId)) {
                 UserResponseDTO otherUser = entry.getTo();
-                response.add(new HashMap<>(){{
-                    put("id",entry.getId());
-                    put("img",otherUser.getAvatar());
-                    put("name",otherUser.getFirstName());
-                    put("friend_id",otherUser.getId());
-                    put("online",otherUser.getStatus()==Status.ONLINE);
-                    put("incoming",false);
-                    put("missed",missed);
-                    put("type","video");
-                    put("startedAt",entry.getStartedAt());
-                    put("endedAt",entry.getEndedAt());
+                response.add(new HashMap<>() {{
+                    put("id", entry.getId());
+                    put("img", otherUser.getAvatar());
+                    put("name", otherUser.getFirstName());
+                    put("friend_id", otherUser.getId());
+                    put("online", otherUser.getStatus() == Status.ONLINE);
+                    put("incoming", false);
+                    put("missed", missed);
+                    put("type", "video");
+                    put("startedAt", entry.getStartedAt());
+                    put("endedAt", entry.getEndedAt());
                 }});
-            }else {
+            } else {
                 UserResponseDTO otherUser = entry.getFrom();
-                response.add(new HashMap<>(){{
-                    put("id",entry.getId());
-                    put("img",otherUser.getAvatar());
-                    put("name",otherUser.getFirstName());
-                    put("friend_id",otherUser.getId());
-                    put("online",otherUser.getStatus()==Status.ONLINE);
-                    put("incoming",true);
-                    put("missed",missed);
-                    put("type","video");
-                    put("startedAt",entry.getStartedAt());
-                    put("endedAt",entry.getEndedAt());
+                response.add(new HashMap<>() {{
+                    put("id", entry.getId());
+                    put("img", otherUser.getAvatar());
+                    put("name", otherUser.getFirstName());
+                    put("friend_id", otherUser.getId());
+                    put("online", otherUser.getStatus() == Status.ONLINE);
+                    put("incoming", true);
+                    put("missed", missed);
+                    put("type", "video");
+                    put("startedAt", entry.getStartedAt());
+                    put("endedAt", entry.getEndedAt());
                 }});
             }
         }
 
-        for(AudioCallResponseDTO entry : audioCalls){
-            boolean missed = entry.getVerdict()!=(Verdict.ACCEPTED);
-            if(entry.getFrom().getId().equals(userId)){
+        for (AudioCallResponseDTO entry : audioCalls) {
+            boolean missed = entry.getVerdict() != (Verdict.ACCEPTED);
+            if (entry.getFrom().getId().equals(userId)) {
                 UserResponseDTO otherUser = entry.getTo();
-                response.add(new HashMap<>(){{
-                    put("id",entry.getId());
-                    put("img",otherUser.getAvatar());
-                    put("name",otherUser.getFirstName());
-                    put("friend_id",otherUser.getId());
-                    put("online",otherUser.getStatus()==Status.ONLINE);
-                    put("incoming",false);
-                    put("missed",missed);
-                    put("type","audio");
-                    put("startedAt",entry.getStartedAt());
-                    put("endedAt",entry.getEndedAt());
+                response.add(new HashMap<>() {{
+                    put("id", entry.getId());
+                    put("img", otherUser.getAvatar());
+                    put("name", otherUser.getFirstName());
+                    put("friend_id", otherUser.getId());
+                    put("online", otherUser.getStatus() == Status.ONLINE);
+                    put("incoming", false);
+                    put("missed", missed);
+                    put("type", "audio");
+                    put("startedAt", entry.getStartedAt());
+                    put("endedAt", entry.getEndedAt());
                 }});
-            }else {
+            } else {
                 UserResponseDTO otherUser = entry.getFrom();
-                response.add(new HashMap<>(){{
-                    put("id",entry.getId());
-                    put("img",otherUser.getAvatar());
-                    put("name",otherUser.getFirstName());
-                    put("friend_id",otherUser.getId());
-                    put("online",otherUser.getStatus()==Status.ONLINE);
-                    put("incoming",true);
-                    put("missed",missed);
-                    put("type","audio");
-                    put("startedAt",entry.getStartedAt());
-                    put("endedAt",entry.getEndedAt());
+                response.add(new HashMap<>() {{
+                    put("id", entry.getId());
+                    put("img", otherUser.getAvatar());
+                    put("name", otherUser.getFirstName());
+                    put("friend_id", otherUser.getId());
+                    put("online", otherUser.getStatus() == Status.ONLINE);
+                    put("incoming", true);
+                    put("missed", missed);
+                    put("type", "audio");
+                    put("startedAt", entry.getStartedAt());
+                    put("endedAt", entry.getEndedAt());
                 }});
             }
         }
-        return new HashMap<>(){{
-            put("status",true);
-            put("message","Call Logs Fetched Successfully");
-            put("data",response);
+        return new HashMap<>() {{
+            put("status", true);
+            put("message", "Call Logs Fetched Successfully");
+            put("data", response);
         }};
     }
 
     @Override
     public Map<String, Object> getUserProfile(String userId) throws ExecutionException, InterruptedException {
         UserResponseDTO user = userRepository.findUserById(userId).toObject(UserResponseDTO.class);
-        return new HashMap<>(){{
-            put("status",true);
-            put("message","User details fetched successfully");
-            put("user",user);
+        return new HashMap<>() {{
+            put("status", true);
+            put("message", "User details fetched successfully");
+            put("user", user);
         }};
     }
 }

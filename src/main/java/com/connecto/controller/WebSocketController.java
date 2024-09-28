@@ -46,26 +46,46 @@ public class WebSocketController {
 
         Map<String, Object> result = webSocketService.newFriendRequest(from, to);
         if (result.get("status").equals("success")) {
-            template.convertAndSendToUser(from, "/topic/request_sent", result);
-            template.convertAndSendToUser(to, "/topic/new_friend_request", "Friend Request Received from " + user.getFirstName());
+            template.convertAndSendToUser(from, "/topic/notification", result.get("message"));
+            template.convertAndSendToUser(to, "/topic/notification", "Friend Request Received from " + user.getFirstName());
         } else {
-            template.convertAndSendToUser(from, "/topic/request_sent", result);
+            template.convertAndSendToUser(from, "/topic/notification", result.get("message"));
         }
+    }
+
+    @MessageMapping("/cancel_friend_request")
+    public void cancelFriendRequest(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
+        String from = payload.get("from").toString();
+        String to = payload.get("to").toString();
+
+        Map<String, Object> result = webSocketService.deleteFriendRequest(from, to);
+        template.convertAndSendToUser(from, "/topic/notification", result.get("message"));
     }
 
     @MessageMapping("/accept_request")
     public void acceptRequest(@Payload Map<String, Object> request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) headerAccessor.getSessionAttributes().get("user");
-        //TODO When the accept request is received.
-        //1. We are getting the current user object from the interceptor.
-        //2. In the friends list of both the Sender and Recipient User, add the new reference.
-        Map<String, Object> response = webSocketService.acceptFriendRequest(request);
+        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
         try {
+            Map<String, Object> response = webSocketService.acceptFriendRequest(request);
             if ((boolean) response.get("status")) {
-                template.convertAndSendToUser(request.get("sender_id").toString(), "/topic/request_accepted", user.getFirstName() + " accepted your Friend Request");
+                template.convertAndSendToUser(request.get("sender_id").toString(), "/topic/notification", user.getFirstName() + " accepted your Friend Request");
+            } else {
+                template.convertAndSendToUser(user.getId(), "/topic/notification", "Failed to Accept");
             }
         } catch (Exception e) {
-            template.convertAndSendToUser(user.getId(), "/topic/request_accepted", "Something went wrong");
+            template.convertAndSendToUser(user.getId(), "/topic/notification", e.getMessage());
+        }
+    }
+
+    @MessageMapping("/remove_friend")
+    public void removeFriend(@Payload Map<String, Object> request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
+        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
+        try {
+            Map<String, Object> response = webSocketService.removeFriend(request);
+            template.convertAndSendToUser(request.get("from").toString(), "/topic/notification", response.get("message"));
+        } catch (Exception e) {
+            template.convertAndSendToUser(user.getId(), "/topic/notification", "Something went wrong");
         }
     }
 
@@ -113,11 +133,7 @@ public class WebSocketController {
         String type = payload.get("type").toString();
         String msg = payload.get("message").toString();
 
-        Message message = new Message()
-                .setFrom(from)
-                .setTo(to)
-                .setText(msg)
-                .setType(MessageType.valueOf(type));
+        Message message = new Message().setFrom(from).setTo(to).setText(msg).setType(MessageType.valueOf(type));
 
         messageService.addMessage(conversation_id, message);
         template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
@@ -140,13 +156,7 @@ public class WebSocketController {
         String media = payload.get("media").toString();
         String mediaType = payload.get("mediaType").toString();
 
-        Message message = new Message()
-                .setFrom(from)
-                .setTo(to)
-                .setText(msg)
-                .setMedia(media)
-                .setMediaType(mediaType)
-                .setType(MessageType.valueOf(type));
+        Message message = new Message().setFrom(from).setTo(to).setText(msg).setMedia(media).setMediaType(mediaType).setType(MessageType.valueOf(type));
 
         messageService.addMessage(conversation_id, message);
         template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
@@ -177,7 +187,7 @@ public class WebSocketController {
             String message_id = payload.get("id") == null ? "" : payload.get("id").toString();
             String conversation_id = payload.get("room_id") == null ? "" : payload.get("room_id").toString();
             String user_id = payload.get("user_id") == null ? "" : payload.get("user_id").toString();
-            HashMap<String,Object> response = messageService.deleteMessage(conversation_id, message_id, user_id).get();
+            HashMap<String, Object> response = messageService.deleteMessage(conversation_id, message_id, user_id).get();
             template.convertAndSendToUser(user.getId(), "/topic/delete_message", response);
         } catch (Exception e) {
             template.convertAndSendToUser(user.getId(), "/topic/delete_message", new HashMap<>() {{

@@ -23,10 +23,10 @@ public class User {
     private boolean verified = false;
     private String otp;
     private Date otpExpiry;
-    private List<String> friends = new ArrayList<>();
-    private String socketId;
     private Status status;
-    private List<String> friendRequests = new ArrayList<>();
+    private List<String> friends = new ArrayList<>();
+    private List<String> friendRequestsSent = new ArrayList<>();
+    private List<String> friendRequestsReceived = new ArrayList<>();
     private String about;
 
     public User() {
@@ -64,6 +64,14 @@ public class User {
         return pattern.matcher(email).matches();
     }
 
+    public List<String> getFriendRequestsReceived() {
+        return friendRequestsReceived;
+    }
+
+    public void setFriendRequestsReceived(List<String> friendRequestsReceived) {
+        this.friendRequestsReceived = friendRequestsReceived;
+    }
+
     public String getAbout() {
         return about;
     }
@@ -72,12 +80,12 @@ public class User {
         this.about = about;
     }
 
-    public List<String> getFriendRequests() {
-        return friendRequests;
+    public List<String> getFriendRequestsSent() {
+        return friendRequestsSent;
     }
 
-    public void setFriendRequests(List<String> friendRequests) {
-        this.friendRequests = friendRequests;
+    public void setFriendRequestsSent(List<String> friendRequestsSent) {
+        this.friendRequestsSent = friendRequestsSent;
     }
 
     public Status getStatus() {
@@ -94,14 +102,6 @@ public class User {
 
     public void setFriends(List<String> friends) {
         this.friends = friends;
-    }
-
-    public String getSocketId() {
-        return socketId;
-    }
-
-    public void setSocketId(String socketId) {
-        this.socketId = socketId;
     }
 
     public boolean isVerified() {
