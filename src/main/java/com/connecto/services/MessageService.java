@@ -26,4 +26,6 @@ public interface MessageService {
     void resetUnreadCount(String from, String conversationId) throws ExecutionException, InterruptedException;
 
     CompletableFuture<HashMap<String, Object>> deleteMessage(String conversationId, String messageId, String userId) throws ExecutionException, InterruptedException;
+
+    CompletableFuture<HashMap<String, Object>> deleteChat(String roomId, String userId) throws ExecutionException, InterruptedException;
 }

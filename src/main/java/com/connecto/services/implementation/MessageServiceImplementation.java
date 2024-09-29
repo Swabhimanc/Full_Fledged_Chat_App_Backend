@@ -93,7 +93,6 @@ public class MessageServiceImplementation implements MessageService {
 
     @Override
     public Map<String, Object> allDirectConversations(String userId) throws ExecutionException, InterruptedException {
-//        Map<String, Object> req = (Map<String, Object>) object;
         DocumentReference userRef = userRepository.findUserReferenceById(userId);
         List<QueryDocumentSnapshot> result = oneToOneMessageRepository.getAllDirectConversations(userRef);
         List<OneToOneMessage> response = new ArrayList<>();
@@ -190,7 +189,7 @@ public class MessageServiceImplementation implements MessageService {
     public CompletableFuture<HashMap<String, Object>> deleteMessage(String conversationId, String messageId, String userId) throws ExecutionException, InterruptedException {
         DocumentReference messageRef = oneToOneMessageRepository.getConversationById(conversationId);
         ApiFuture<DocumentSnapshot> future = messageRef.get();
-        AtomicBoolean deleted= new AtomicBoolean(false);
+        AtomicBoolean deleted = new AtomicBoolean(false);
         CompletableFuture<HashMap<String, Object>> asyncProcess = CompletableFuture.supplyAsync(() -> {
             try {
                 DocumentSnapshot document = future.get();
@@ -198,14 +197,14 @@ public class MessageServiceImplementation implements MessageService {
                 for (Map<String, Object> message : messages) {
                     if (message.get("id").equals(messageId)) {
                         List<String> deletedBy = (List<String>) message.get("deletedBy");
-                        if(!deletedBy.contains(userId)){
+                        if (!deletedBy.contains(userId)) {
                             deletedBy.add(userId);
                             deleted.set(true);
                         }
                         return messages;
                     }
                 }
-                if(!deleted.get()){
+                if (!deleted.get()) {
                     throw new RuntimeException("Message Not Found");
                 }
                 return messages;
@@ -225,6 +224,50 @@ public class MessageServiceImplementation implements MessageService {
             HashMap<String, Object> response = new HashMap<>();
             response.put("status", true);
             response.put("message", "Messages deleted successfully");
+            return response;
+        }).exceptionally(e -> {
+            HashMap<String, Object> response = new HashMap<>();
+            response.put("status", false);
+            response.put("message", "Error occurred: " + e.getMessage());
+            return response;
+        });
+//        asyncProcess.join();
+        return asyncProcess;
+    }
+
+    @Override
+    public CompletableFuture<HashMap<String, Object>> deleteChat(String roomId, String userId) throws ExecutionException, InterruptedException {
+
+        DocumentReference messageRef = oneToOneMessageRepository.getConversationById(roomId);
+        ApiFuture<DocumentSnapshot> future = messageRef.get();
+        AtomicBoolean deleted = new AtomicBoolean(false);
+        CompletableFuture<HashMap<String, Object>> asyncProcess = CompletableFuture.supplyAsync(() -> {
+            try {
+                DocumentSnapshot document = future.get();
+                List<Map<String, Object>> messages = (List<Map<String, Object>>) document.get("messages");
+                for (Map<String, Object> message : messages) {
+                    List<String> deletedBy = (List<String>) message.get("deletedBy");
+                    if(!deletedBy.contains(userId)){
+                        deletedBy.add(userId);
+                    }
+                }
+                return messages;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).thenComposeAsync(messages -> {
+            ApiFuture<WriteResult> writeFuture = messageRef.update("messages", messages);
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    return writeFuture.get();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }).thenApplyAsync(result -> {
+            HashMap<String, Object> response = new HashMap<>();
+            response.put("status", true);
+            response.put("message", "Chat deleted successfully");
             return response;
         }).exceptionally(e -> {
             HashMap<String, Object> response = new HashMap<>();

@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/user")
@@ -128,6 +130,25 @@ public class UserController {
                 return ResponseEntity.status(200).body(response);
             }
             return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/delete-chat")
+    public ResponseEntity<?> deleteChat(@RequestBody Map<String, Object> request, HttpServletRequest httpServletRequest) {
+        try {
+            User user = (User) httpServletRequest.getAttribute("user");
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorised");
+            }
+            String room_id = request.get("room_id").toString();
+            String user_id = request.get("user_id").toString();
+            CompletableFuture<HashMap<String, Object>> response = messageService.deleteChat(room_id, user_id);
+            if ((boolean) response.get().get("status")) {
+                return ResponseEntity.status(200).body(response.get());
+            }
+            return ResponseEntity.status(400).body(response.get());
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }

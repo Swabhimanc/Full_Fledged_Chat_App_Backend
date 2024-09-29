@@ -79,4 +79,14 @@ public class OneToOneMessageRepository {
         }
         conversationRef.update("unreadCounts",unreadCounts);
     }
+
+    public void updateOneToOneMessage(String id, String field, String value){
+        DocumentReference messageReference = oneToOneRef.document(id);
+        messageReference.update(field, value);
+    }
+
+    public void updateOneToOneMessage(String id, Map<String,Object>value){
+        DocumentReference messageReference = oneToOneRef.document(id);
+        messageReference.update(value);
+    }
 }

@@ -10,7 +10,7 @@ public class OneToOneMessage {
     private String id;
     private List<UserResponseDTO> participants;
     private List<Message> messages;
-    private Map<String,Long> unreadCounts;
+    private Map<String, Long> unreadCounts;
     private Date createdAt;
 
     public Date getCreatedAt() {
