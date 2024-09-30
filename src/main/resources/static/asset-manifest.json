@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/static/js/main.b0fcb4d0.js",
+    "main.js": "/static/js/main.bb601b5d.js",
     "static/js/87.634e144c.chunk.js": "/static/js/87.634e144c.chunk.js",
     "static/js/100.b1f89908.chunk.js": "/static/js/100.b1f89908.chunk.js",
     "static/js/739.68a3792d.chunk.js": "/static/js/739.68a3792d.chunk.js",
@@ -10,7 +10,7 @@
     "static/js/478.d60bed7c.chunk.js": "/static/js/478.d60bed7c.chunk.js",
     "static/js/143.b8949910.chunk.js": "/static/js/143.b8949910.chunk.js",
     "static/js/826.9fac6372.chunk.js": "/static/js/826.9fac6372.chunk.js",
-    "static/js/561.5fa69c7a.chunk.js": "/static/js/561.5fa69c7a.chunk.js",
+    "static/js/561.52cb6287.chunk.js": "/static/js/561.52cb6287.chunk.js",
     "static/js/875.2639ae1e.chunk.js": "/static/js/875.2639ae1e.chunk.js",
     "static/js/171.875a906c.chunk.js": "/static/js/171.875a906c.chunk.js",
     "static/js/369.3b75f996.chunk.js": "/static/js/369.3b75f996.chunk.js",
@@ -49,7 +49,7 @@
     "static/media/ringtone.mp3": "/static/media/ringtone.464cc45992f202d5ea62.mp3",
     "static/media/logo.ico": "/static/media/logo.45af386bcce066c1c6ab.ico",
     "index.html": "/index.html",
-    "main.b0fcb4d0.js.map": "/static/js/main.b0fcb4d0.js.map",
+    "main.bb601b5d.js.map": "/static/js/main.bb601b5d.js.map",
     "87.634e144c.chunk.js.map": "/static/js/87.634e144c.chunk.js.map",
     "100.b1f89908.chunk.js.map": "/static/js/100.b1f89908.chunk.js.map",
     "739.68a3792d.chunk.js.map": "/static/js/739.68a3792d.chunk.js.map",
@@ -59,7 +59,7 @@
     "478.d60bed7c.chunk.js.map": "/static/js/478.d60bed7c.chunk.js.map",
     "143.b8949910.chunk.js.map": "/static/js/143.b8949910.chunk.js.map",
     "826.9fac6372.chunk.js.map": "/static/js/826.9fac6372.chunk.js.map",
-    "561.5fa69c7a.chunk.js.map": "/static/js/561.5fa69c7a.chunk.js.map",
+    "561.52cb6287.chunk.js.map": "/static/js/561.52cb6287.chunk.js.map",
     "875.2639ae1e.chunk.js.map": "/static/js/875.2639ae1e.chunk.js.map",
     "171.875a906c.chunk.js.map": "/static/js/171.875a906c.chunk.js.map",
     "369.3b75f996.chunk.js.map": "/static/js/369.3b75f996.chunk.js.map",
@@ -97,6 +97,6 @@
     "731.5ee20049.chunk.js.map": "/static/js/731.5ee20049.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.b0fcb4d0.js"
+    "static/js/main.bb601b5d.js"
   ]
 }
