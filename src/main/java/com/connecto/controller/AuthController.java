@@ -3,13 +3,13 @@ package com.connecto.controller;
 import com.connecto.DTO.responseDTO.UserResponseDTO;
 import com.connecto.model.Avatar;
 import com.connecto.services.AuthService;
+import com.connecto.services.GoogleAuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.mail.EmailException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,15 +22,41 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private GoogleAuthService googleAuthService;
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String,Object> request) {
+    public ResponseEntity<?> login(@RequestBody Map<String, Object> request) throws RuntimeException {
         try {
-            Map<String, Object> response = authService.login(request);
+            Map<String, Object> response = null;
+            if (request.get("auth_type").equals("REGULAR")) {
+                response = authService.login(request);
+            } else if (request.get("auth_type").equals("GOOGLE")) {
+                response = googleAuthService.login(request);
+            }
+            if (response != null && (boolean) response.get("status")) {
+                return ResponseEntity.status(200).body(response);
+            }
+            return ResponseEntity.status(400).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody Map<String, Object> request) {
+        try {
+            Map<String, Object> response = null;
+            if (request.get("auth_type").equals("REGULAR")) {
+                response = authService.register(request);
+            } else if (request.get("auth_type").equals("GOOGLE")) {
+                response = googleAuthService.register(request);
+            }
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
             return ResponseEntity.status(400).body(response);
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
@@ -49,10 +75,10 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String,Object> request, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, Object> request, HttpServletRequest httpServletRequest) {
         try {
             String URL = httpServletRequest.getHeader("Origin");
-            Map<String,Object> response = authService.forgotPassword(request,URL);
+            Map<String, Object> response = authService.forgotPassword(request, URL);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
@@ -75,26 +101,13 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String,Object> request) {
-        try {
-            Map<String, Object> response = authService.register(request);
-            if ((boolean) response.get("status")) {
-                return ResponseEntity.status(200).body(response);
-            }
-            return ResponseEntity.status(400).body(response);
-        } catch (ExecutionException | InterruptedException | EmailException | IOException e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
     @PostMapping("/verify")
     public ResponseEntity<?> verifyOtp(@RequestBody Object object) {
         try {
-            Map<String,Object> response = authService.verifyOtp(object);
-            if((boolean)response.get("status")){
+            Map<String, Object> response = authService.verifyOtp(object);
+            if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
-            }else {
+            } else {
                 return ResponseEntity.status(403).body(response);
             }
         } catch (ExecutionException | InterruptedException e) {

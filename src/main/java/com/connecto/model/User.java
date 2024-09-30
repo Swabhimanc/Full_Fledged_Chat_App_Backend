@@ -2,6 +2,7 @@ package com.connecto.model;
 
 
 import com.connecto.enums.Status;
+import com.connecto.enums.UserType;
 import com.google.cloud.firestore.annotation.IgnoreExtraProperties;
 
 import java.util.*;
@@ -10,6 +11,7 @@ import java.util.regex.Pattern;
 @IgnoreExtraProperties
 public class User {
     private String id;
+    private String googleUserId;
     private String firstName;
     private String lastName;
     private String avatar;
@@ -28,11 +30,10 @@ public class User {
     private List<String> friendRequestsSent = new ArrayList<>();
     private List<String> friendRequestsReceived = new ArrayList<>();
     private String about;
-
+    private UserType userType;
     public User() {
 
     }
-
     public User(Map reqObj) {
         this.firstName = (String) reqObj.get("firstName");
         this.lastName = (String) reqObj.get("lastName");
@@ -62,6 +63,22 @@ public class User {
         String emailRegex = "^[\\w-\\.]+@[\\w-]+\\.[\\w-]{2,4}$";
         Pattern pattern = Pattern.compile(emailRegex);
         return pattern.matcher(email).matches();
+    }
+
+    public String getGoogleUserId() {
+        return googleUserId;
+    }
+
+    public void setGoogleUserId(String googleUserId) {
+        this.googleUserId = googleUserId;
+    }
+
+    public UserType getUserType() {
+        return userType;
+    }
+
+    public void setUserType(UserType userType) {
+        this.userType = userType;
     }
 
     public List<String> getFriendRequestsReceived() {

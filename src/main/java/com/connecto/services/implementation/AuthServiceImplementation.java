@@ -46,14 +46,14 @@ public class AuthServiceImplementation implements AuthService {
 
         // Email check logic...
         QuerySnapshot emailCheck = userRepository.findUserByEmail((String) reqObj.get("email"));
-        if (!emailCheck.getDocuments().isEmpty()) {
+        if (!emailCheck.isEmpty()) {
             User user = emailCheck.getDocuments().get(0).toObject(User.class);
 
             if (user.isVerified()) {
                 // Email is already in use and verified
                 return new HashMap<>() {{
                     put("status", false);
-                    put("message", "Email already in use. Please login.");
+                    put("message", "Email already in use. Please login");
                 }};
             } else {
                 // Email exists but is not verified, update the existing user
@@ -74,7 +74,6 @@ public class AuthServiceImplementation implements AuthService {
                 }};
             }
             userRepository.saveUser(user);
-            // Generate and send OTP
             return otpService.generateOtp(user);
         }
     }

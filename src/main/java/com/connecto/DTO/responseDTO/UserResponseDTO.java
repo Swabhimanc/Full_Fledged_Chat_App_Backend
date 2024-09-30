@@ -1,6 +1,7 @@
 package com.connecto.DTO.responseDTO;
 
 import com.connecto.enums.Status;
+import com.connecto.enums.UserType;
 import com.connecto.model.User;
 import com.google.cloud.firestore.annotation.IgnoreExtraProperties;
 
@@ -13,6 +14,7 @@ public class UserResponseDTO {
     private String avatar;
     private Status status;
     private String about;
+    private UserType userType;
 
     public UserResponseDTO(User user) {
         this.id = user.getId();
@@ -22,9 +24,19 @@ public class UserResponseDTO {
         this.avatar = user.getAvatar();
         this.status = user.getStatus();
         this.about = user.getAbout();
+        this.userType = user.getUserType();
     }
+
     public UserResponseDTO() {
 
+    }
+
+    public UserType getUserType() {
+        return userType;
+    }
+
+    public void setUserType(UserType userType) {
+        this.userType = userType;
     }
 
     public String getAbout() {
