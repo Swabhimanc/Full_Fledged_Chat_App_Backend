@@ -76,7 +76,12 @@ public class GoogleAuthServiceImplementation implements GoogleAuthService {
     public Map<String, Object> register(Map<String, Object> request) throws Exception {
         GoogleIdToken.Payload payload = verifyGoogleToken(request.get("credential").toString());
 
+        String firstName = payload.get("family_name").toString();
+        String lastName = payload.get("family_name").toString();
         String email = payload.getEmail();
+        String avatar = payload.get("picture")!=null ? payload.get("picture").toString():"";
+        String googleUserId = payload.getUserId();
+        boolean isEmailVerified = payload.getEmailVerified();
         QuerySnapshot querySnapshot = userRepository.findUserByEmail(email);
         if (!querySnapshot.isEmpty()) {
             return new HashMap<>() {{
@@ -85,12 +90,12 @@ public class GoogleAuthServiceImplementation implements GoogleAuthService {
             }};
         }
         User user = new User();
-        user.setFirstName(payload.get("given_name").toString());
-        user.setLastName(payload.get("family_name").toString());
-        user.setEmail(payload.getEmail());
-        user.setAvatar(payload.get("picture").toString());
-        user.setGoogleUserId(payload.getUserId());
-        user.setVerified(payload.getEmailVerified());
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
+        user.setAvatar(avatar);
+        user.setGoogleUserId(googleUserId);
+        user.setVerified(isEmailVerified);
         user.setUserType(UserType.GOOGLE);
         userRepository.saveUser(user);
 
