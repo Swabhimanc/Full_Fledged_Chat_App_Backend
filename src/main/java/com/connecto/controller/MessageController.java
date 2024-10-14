@@ -18,16 +18,6 @@ public class MessageController {
     @Autowired
     private MessageService messageService;
 
-//    @PostMapping("/addmsg")
-//    public ResponseEntity<?> addMessage(@RequestBody Message message) {
-//        try {
-//            Object result = messageService.addMessage(conversation_id, message);
-//            return ResponseEntity.status(200).body(result);
-//        } catch (ExecutionException | InterruptedException e) {
-//            return ResponseEntity.status(500).body(e.getMessage());
-//        }
-//    }
-
     @PostMapping("/getmsg")
     public ResponseEntity<?> getAllMessages(@RequestParam String from, @RequestParam String to) {
         try {
@@ -40,6 +30,7 @@ public class MessageController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
     @PostMapping("/getLimitedMessage")
     public ResponseEntity<?> getLimitedMessage(@RequestBody Object object) {
         try {
@@ -50,6 +41,7 @@ public class MessageController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
     @GetMapping("/get_one_to_one")
     public ResponseEntity<?> getOneToOne(@RequestParam String userId) throws ExecutionException, InterruptedException {
         try{
@@ -59,6 +51,7 @@ public class MessageController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
     @GetMapping("/start_conversation")
     public ResponseEntity<?> getOneToOne(@RequestBody Map<String,Object>payload) throws ExecutionException, InterruptedException {
         try{

@@ -1,5 +1,5 @@
 # Use an official OpenJDK runtime as a parent image
-FROM openjdk:17-jdk-alpine
+FROM openjdk:17-jdk-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -8,8 +8,17 @@ WORKDIR /app
 #COPY /src/main/resources/Secrets/service-key.json /app/src/main/resources/Secrets/service-key.json
 COPY target/*.jar /app/app.jar
 
-# Expose the port on which the application runs
-EXPOSE 5000
+# Update package lists and install nginx + curl
+RUN apt-get update && \
+    apt-get install -y nginx curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Run the JAR file
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Copy your nginx configuration to the container
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose the port on which the application will run
+EXPOSE 8080
+
+# Run the JAR file and Nginx together
+CMD ["sh", "-c", "java -jar /app/app.jar & nginx -g 'daemon off;'"]

@@ -36,6 +36,7 @@ public class CallController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
     @PostMapping("/start-audio-call")
     public ResponseEntity<?> startAudioCall(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
         try {
