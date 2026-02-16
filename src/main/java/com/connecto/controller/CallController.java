@@ -66,7 +66,7 @@ public class CallController {
                 "}," +
                 "stream_id_list: null" +
                 "}";
-        TokenServerAssistant.TokenInfo token = TokenServerAssistant.generateToken04(159164384, userId, "14b5a9278d3c26dba6a6cc6976eb891e", 3600, null);
+        TokenServerAssistant.TokenInfo token = TokenServerAssistant.generateToken04(668945713, userId, "7d1c4457dfaa712a9da3f7c0a7d57537", 3600, null);
         return ResponseEntity.status(200).body(new HashMap<>() {{
             put("status", true);
             put("message", "Token Generated Successfully");
