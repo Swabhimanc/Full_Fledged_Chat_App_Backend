@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/**").permitAll() // Allow access to static resources
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/stomp/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .anyRequest().authenticated()

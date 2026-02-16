@@ -28,7 +28,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
+        // Keep STOMP/SockJS on a dedicated path to avoid colliding with Socket.IO (/ws)
+        registry.addEndpoint("/stomp")
                 .setAllowedOrigins("http://localhost:3000", "https://connecto-396305485425.asia-south1.run.app")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
