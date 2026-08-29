@@ -1,7 +1,9 @@
 package com.connecto.controller;
 
 import com.connecto.model.Message;
+import com.connecto.model.User;
 import com.connecto.services.MessageService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +21,10 @@ public class MessageController {
     private MessageService messageService;
 
     @PostMapping("/getmsg")
-    public ResponseEntity<?> getAllMessages(@RequestParam String from, @RequestParam String to) {
+    public ResponseEntity<?> getAllMessages(@RequestParam String to, HttpServletRequest request) {
         try {
-            List<Map<?,?>> messages = messageService.getAllMessages(from, to);
+            User user = requireUser(request);
+            List<Map<?,?>> messages = messageService.getAllMessages(user.getId(), to);
             return ResponseEntity.status(200).body(new HashMap<>() {{
                 put("status", true);
                 put("data", messages.toArray());
@@ -32,10 +35,11 @@ public class MessageController {
     }
 
     @PostMapping("/getLimitedMessage")
-    public ResponseEntity<?> getLimitedMessage(@RequestBody Object object) {
+    public ResponseEntity<?> getLimitedMessage(@RequestBody Object object, HttpServletRequest httpRequest) {
         try {
+            User user = requireUser(httpRequest);
             Map request = (Map)object;
-            Object response = messageService.getLimitedMessage((String)request.get("from"),(String)request.get("to"),(String)request.get("lastVisible"),(Integer)request.get("limit"));
+            Object response = messageService.getLimitedMessage(user.getId(), (String)request.get("to"),(String)request.get("lastVisible"),(Integer)request.get("limit"));
             return ResponseEntity.status(200).body(response);
         } catch (ExecutionException | InterruptedException e) {
             return ResponseEntity.status(500).body(e.getMessage());
@@ -43,22 +47,30 @@ public class MessageController {
     }
 
     @GetMapping("/get_one_to_one")
-    public ResponseEntity<?> getOneToOne(@RequestParam String userId) throws ExecutionException, InterruptedException {
+    public ResponseEntity<?> getOneToOne(HttpServletRequest request) throws ExecutionException, InterruptedException {
         try{
-            Map<String,Object> response = messageService.allDirectConversations(userId);
+            Map<String,Object> response = messageService.allDirectConversations(requireUser(request).getId());
             return ResponseEntity.status(200).body(response);
         }catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
-    @GetMapping("/start_conversation")
-    public ResponseEntity<?> getOneToOne(@RequestBody Map<String,Object>payload) throws ExecutionException, InterruptedException {
+    @PostMapping("/start_conversation")
+    public ResponseEntity<?> startConversation(@RequestBody Map<String,Object>payload, HttpServletRequest request) throws ExecutionException, InterruptedException {
         try{
-            Map<String,Object> response = messageService.startConversation(payload.get("from").toString(),payload.get("to").toString());
+            Map<String,Object> response = messageService.startConversation(requireUser(request).getId(), payload.get("to").toString());
             return ResponseEntity.status(200).body(response);
         }catch (Exception e){
             return ResponseEntity.status(500).body(e.getMessage());
         }
+    }
+
+    private User requireUser(HttpServletRequest request) {
+        User user = (User) request.getAttribute("user");
+        if (user == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
+        }
+        return user;
     }
 }

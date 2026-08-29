@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkchat||=[]).push([[478],{478(a,s,t){t.r(s);t(5043);var c=t(579);const e=()=>(0,c.jsx)(c.Fragment,{children:"404"});t.d(s,["default",0,e])}}]);
+//# sourceMappingURL=478.5707a5fc.chunk.js.map

@@ -4,7 +4,7 @@ steps:
     entrypoint: 'sh'
     args:
       - '-c'
-      - './mvnw clean package -DskipTests'
+      - './mvnw clean package'
 
   # Step 2: Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'

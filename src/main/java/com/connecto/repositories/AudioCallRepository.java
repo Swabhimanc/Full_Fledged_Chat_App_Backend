@@ -31,7 +31,7 @@ public class AudioCallRepository {
                 .get()
                 .getDocuments();
         List<QueryDocumentSnapshot> doc2 = audioCallRef
-                .whereEqualTo("participants",List.of(from,to))
+                .whereEqualTo("participants",List.of(to,from))
                 .get()
                 .get()
                 .getDocuments();
@@ -48,8 +48,24 @@ public class AudioCallRepository {
             }});
         }
     }
+
+    public boolean isParticipant(String callId, String userId) throws ExecutionException, InterruptedException {
+        DocumentSnapshot call = audioCallRef.document(callId).get().get();
+        List<String> participants = call.exists() ? (List<String>) call.get("participants") : null;
+        return participants != null && participants.contains(userId);
+    }
     public List<QueryDocumentSnapshot> getAudioCallLogs(String userId) throws ExecutionException, InterruptedException {
         List<QueryDocumentSnapshot> response = audioCallRef.whereArrayContains("participants",userId).get().get().getDocuments();
         return response;
+    }
+
+    public List<QueryDocumentSnapshot> getAudioCallLogs(String userId, int limit) throws ExecutionException, InterruptedException {
+        return audioCallRef
+                .whereArrayContains("participants", userId)
+                .orderBy("startedAt", Query.Direction.DESCENDING)
+                .limit(limit)
+                .get()
+                .get()
+                .getDocuments();
     }
 }

@@ -17,7 +17,7 @@ public interface UserService {
 
     Map<String, Object> updateUserProfile(String id,Map<String, Object> object) throws ExecutionException, InterruptedException;
 
-    Map<String, Object> getCallLogs(String userId) throws ExecutionException, InterruptedException;
+    Map<String, Object> getCallLogs(String userId, int limit) throws ExecutionException, InterruptedException;
 
     Map<String,Object> getUserProfile(String userId) throws ExecutionException, InterruptedException;
 }

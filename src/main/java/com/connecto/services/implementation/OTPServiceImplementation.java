@@ -44,9 +44,10 @@ public class OTPServiceImplementation implements OTPService {
 
         final String OTP = passwordEncoder.encode(EmailService.sendOTP(user.getFirstName(),user.getEmail()));
         UserResponseDTO updatedUser = userRepository.updateUser(user.getId(),new HashMap<>(){{
-            put("otp",OTP);
-            put("otpExpiry",new Date(System.currentTimeMillis()+ Duration.ofMinutes(10).toMillis()));
-        }});
+             put("otp",OTP);
+             put("otpExpiry",new Date(System.currentTimeMillis()+ Duration.ofMinutes(10).toMillis()));
+             put("otpAttempts", 0);
+         }});
         if (updatedUser != null) {
             return new HashMap<>() {{
                 put("status", true);

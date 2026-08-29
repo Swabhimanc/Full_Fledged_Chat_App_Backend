@@ -7,14 +7,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
+import java.security.SecureRandom;
 
 public class EmailService {
 
     private static String OTP = "";
 
     public static String sendOTP(String name, String userEmail) throws EmailException, IOException {
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
         int randomNumber = random.nextInt(999999); // Generates a number between 0 and 999999
         String OTP = String.format("%06d", randomNumber);
 

@@ -6,6 +6,8 @@ import com.connecto.services.implementation.AuthServiceImplementation;
 import com.connecto.services.implementation.UserServiceImplementation;
 import com.connecto.utilities.CustomUserDetails;
 import com.connecto.utilities.security.JwtUtil;
+import com.connecto.utilities.security.SessionCookieService;
+import com.corundumstudio.socketio.AuthorizationResult;
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
@@ -18,6 +20,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Map;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
@@ -25,7 +29,7 @@ import java.util.concurrent.ExecutionException;
 @EnableWebSecurity
 public class SocketIOConfig {
 
-    public static ConcurrentHashMap<String, SocketIOClient> clientMap = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, Set<SocketIOClient>> clientMap = new ConcurrentHashMap<>();
     private final JwtUtil jwtUtil;
     private final AuthServiceImplementation authServiceImplementation;
     private final UserServiceImplementation userServiceImplementation;
@@ -33,6 +37,8 @@ public class SocketIOConfig {
     private String socketHost;
     @Value("${socket-io-port}")
     private Integer socketPort;
+    @Value("${app.allowed-origins}")
+    private String allowedOrigins;
 
     public SocketIOConfig(JwtUtil jwtUtil, UserServiceImplementation userServiceImplementation, AuthServiceImplementation authServiceImplementation) {
         this.jwtUtil = jwtUtil;
@@ -46,8 +52,19 @@ public class SocketIOConfig {
         config.setHostname(socketHost);
         config.setPort(socketPort);
         config.setTransports(Transport.WEBSOCKET, Transport.POLLING);
-        config.setOrigin("*");
         config.setContext("/ws");
+        config.setOrigin(Arrays.stream(allowedOrigins.split(",")).map(String::trim).findFirst().orElse("http://localhost:3000"));
+        config.setAuthorizationListener(handshakeData -> {
+            String origin = handshakeData.getHttpHeaders().get("Origin");
+            Set<String> origins = Set.copyOf(Arrays.stream(allowedOrigins.split(",")).map(String::trim).toList());
+            String token = tokenFromCookies(handshakeData.getHttpHeaders().get("Cookie"));
+            String userId = token == null ? null : jwtUtil.extractUserId(token);
+            boolean authorized = (origin == null || origins.contains(origin))
+                    && userId != null
+                    && jwtUtil.isAccessToken(token)
+                    && jwtUtil.validateToken(token, userId);
+            return authorized ? AuthorizationResult.SUCCESSFUL_AUTHORIZATION : AuthorizationResult.FAILED_AUTHORIZATION;
+        });
         SocketIOServer server = new SocketIOServer(config);
         setupConnectionListeners(server);
         return server;
@@ -57,49 +74,63 @@ public class SocketIOConfig {
         server.addConnectListener(socketIOClient -> {
 
             HandshakeData handshakeData = socketIOClient.getHandshakeData();
-            Map<String, Object> authToken = (Map<String, Object>) handshakeData.getAuthToken();
-            String token = authToken != null && authToken.get("token") != null ? authToken.get("token").toString() : null;
-
-            if (handshakeData.getUrlParams().containsKey("token")) {
-                token = handshakeData.getUrlParams().get("token").get(0);
-            }
+            String token = tokenFromCookies(handshakeData.getHttpHeaders().get("Cookie"));
             try {
-                if (token != null && token.startsWith("Bearer ")) {
-                    token = token.substring(7);
-
+                if (token != null) {
                     String userId = jwtUtil.extractUserId(token);
-                    if (jwtUtil.validateToken(token, userId)) {
+                    if (jwtUtil.isAccessToken(token) && jwtUtil.validateToken(token, userId)) {
                         CustomUserDetails userDetails = authServiceImplementation.loadUserByUserId(userId);
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                        clientMap.put(userId, socketIOClient);
+                        clientMap.computeIfAbsent(userId, ignored -> ConcurrentHashMap.newKeySet()).add(socketIOClient);
                         userServiceImplementation.setUserStatus(userId, Status.ONLINE);
                         socketIOClient.set("user", userDetails.getUser());
                         User user = socketIOClient.get("user");
                     } else {
-                        System.out.println("Invalid JWT token");
+                        socketIOClient.disconnect();
                         throw new IllegalStateException("Invalid JWT token");
                     }
                 } else {
-                    System.out.println("Missing or Invalid Authorization Header");
+                    socketIOClient.disconnect();
                 }
             } catch (Exception e) {
-                System.out.println("Error processing WebSocket connection: " + e.getMessage());
+                socketIOClient.disconnect();
             }
         });
 
         server.addDisconnectListener(socketIOClient -> {
-            if (clientMap.containsValue(socketIOClient)) {
-                User user = socketIOClient.get("user");
+            User user = socketIOClient.get("user");
+            if (user != null) {
+                Set<SocketIOClient> clients = clientMap.get(user.getId());
+                if (clients != null) {
+                    clients.remove(socketIOClient);
+                    if (clients.isEmpty()) {
+                        clientMap.remove(user.getId(), clients);
+                    }
+                }
                 try {
-                    userServiceImplementation.setUserStatus(user.getId(), Status.OFFLINE);
+                    if (!clientMap.containsKey(user.getId())) {
+                        userServiceImplementation.setUserStatus(user.getId(), Status.OFFLINE);
+                    }
                 } catch (ExecutionException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
         });
+    }
+
+    private String tokenFromCookies(String cookieHeader) {
+        if (cookieHeader == null) {
+            return null;
+        }
+        return Arrays.stream(cookieHeader.split(";"))
+                .map(String::trim)
+                .filter(cookie -> cookie.startsWith(SessionCookieService.ACCESS_COOKIE + "="))
+                .map(cookie -> cookie.substring(cookie.indexOf('=') + 1))
+                .findFirst()
+                .orElse(null);
     }
 
 }

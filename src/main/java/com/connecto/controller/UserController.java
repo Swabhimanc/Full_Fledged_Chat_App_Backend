@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -95,7 +97,14 @@ public class UserController {
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorised");
             }
-            Map<String, Object> response = userService.updateUserProfile(user.getId(), object);
+            Set<String> editableFields = Set.of("firstName", "lastName", "avatar", "about");
+            Map<String, Object> safeUpdates = object.entrySet().stream()
+                    .filter(entry -> editableFields.contains(entry.getKey()))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            if (safeUpdates.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("status", false, "message", "No editable fields provided"));
+            }
+            Map<String, Object> response = userService.updateUserProfile(user.getId(), safeUpdates);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
@@ -106,11 +115,17 @@ public class UserController {
     }
 
     @GetMapping("/get-call-logs")
-    public ResponseEntity<?> getCallLogs(HttpServletRequest request) {
+    public ResponseEntity<?> getCallLogs(
+            HttpServletRequest request,
+            @RequestParam(value = "limit", defaultValue = "40") int limit
+    ) {
         try {
             User fromUser = (User) request.getAttribute("user");
+            if (fromUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
             String userId = fromUser.getId();
-            Map<String, Object> response = userService.getCallLogs(userId);
+            Map<String, Object> response = userService.getCallLogs(userId, limit);
             if ((boolean) response.get("status")) {
                 return ResponseEntity.status(200).body(response);
             }
@@ -124,6 +139,9 @@ public class UserController {
     public ResponseEntity<?> getDirectConversations(HttpServletRequest request) {
         try {
             User fromUser = (User) request.getAttribute("user");
+            if (fromUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
             String userId = fromUser.getId();
             Map<String, Object> response = messageService.allDirectConversations(userId);
             if ((boolean) response.get("status")) {
@@ -143,8 +161,7 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorised");
             }
             String room_id = request.get("room_id").toString();
-            String user_id = request.get("user_id").toString();
-            CompletableFuture<HashMap<String, Object>> response = messageService.deleteChat(room_id, user_id);
+            CompletableFuture<HashMap<String, Object>> response = messageService.deleteChat(room_id, user.getId());
             if ((boolean) response.get().get("status")) {
                 return ResponseEntity.status(200).body(response.get());
             }

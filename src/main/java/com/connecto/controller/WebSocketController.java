@@ -2,422 +2,227 @@ package com.connecto.controller;
 
 import com.connecto.enums.MessageType;
 import com.connecto.enums.Status;
+import com.connecto.model.Group;
 import com.connecto.model.Message;
 import com.connecto.model.User;
+import com.connecto.services.GroupService;
 import com.connecto.services.MessageService;
 import com.connecto.services.UserService;
 import com.connecto.services.WebSocketService;
-import com.connecto.socketIO.SocketIOConfig;
 import com.connecto.socketIO.SocketIOService;
-import com.connecto.utilities.security.JwtUtil;
-import com.corundumstudio.socketio.HandshakeData;
+import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Controller;
 
-import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 @Controller
 public class WebSocketController {
+    private final SocketIOServer server;
+    private final SocketIOService socketIOService;
+    private final WebSocketService webSocketService;
+    private final UserService userService;
+    private final MessageService messageService;
+    private final GroupService groupService;
 
-    private final SimpMessagingTemplate template;
-    @Autowired
-    JwtUtil jwtUtil;
-    @Autowired
-    private WebSocketService webSocketService;
-    @Autowired
-    private SocketIOServer server;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private SocketIOService socketIOService;
-
-    @Autowired
-    private MessageService messageService;
-
-    public WebSocketController(SimpMessagingTemplate template) {
-        this.template = template;
-    }
-
-    @MessageMapping("/send_friend_request")
-    public void newFriendRequest(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) headerAccessor.getSessionAttributes().get("user");
-        String from = payload.get("from").toString();
-        String to = payload.get("to").toString();
-
-        Map<String, Object> result = webSocketService.newFriendRequest(from, to);
-        template.convertAndSendToUser(from, "/topic/notification", result.get("message"));
-        SocketIOConfig.clientMap.get(from).sendEvent("notification", result.get("message"));
-        if (result.get("status").equals("success")) {
-            template.convertAndSendToUser(to, "/topic/notification", "Friend Request Received from " + user.getFirstName());
-            SocketIOConfig.clientMap.get(to).sendEvent("notification", "New Friend Request Received");
-        }
-    }
-
-    @MessageMapping("/cancel_friend_request")
-    public void cancelFriendRequest(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        String from = payload.get("from").toString();
-        String to = payload.get("to").toString();
-
-        Map<String, Object> result = webSocketService.deleteFriendRequest(from, to);
-        template.convertAndSendToUser(from, "/topic/notification", result.get("message"));
-        SocketIOConfig.clientMap.get(from).sendEvent("notification", result.get("message"));
-    }
-
-    @MessageMapping("/accept_request")
-    public void acceptRequest(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        String sender_id = payload.get("sender_id").toString();
-        String recipient_id = payload.get("recipient_id").toString();
-        try {
-            Map<String, Object> response = webSocketService.acceptFriendRequest(payload);
-            if ((boolean) response.get("status")) {
-                template.convertAndSendToUser(sender_id, "/topic/notification", user.getFirstName() + " accepted your Friend Request");
-                SocketIOConfig.clientMap.get(sender_id).sendEvent("notification", user.getFirstName() + " accepted your Friend Request");
-            } else {
-                template.convertAndSendToUser(recipient_id, "/topic/notification", "Failed to Accept");
-                SocketIOConfig.clientMap.get(recipient_id).sendEvent("notification", "Failed to Accept");
-            }
-        } catch (Exception e) {
-            template.convertAndSendToUser(recipient_id, "/topic/notification", e.getMessage());
-            SocketIOConfig.clientMap.get(recipient_id).sendEvent("notification", e.getMessage());
-        }
-    }
-
-    @MessageMapping("/remove_friend")
-    public void removeFriend(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        String from = payload.get("from").toString();
-        String to = payload.get("to").toString();
-        try {
-            Map<String, Object> response = webSocketService.removeFriend(payload);
-            template.convertAndSendToUser(from, "/topic/notification", response.get("message"));
-            SocketIOConfig.clientMap.get(from).sendEvent("notification", response.get("message"));
-        } catch (Exception e) {
-            template.convertAndSendToUser(from, "/topic/notification", "Something went wrong");
-            SocketIOConfig.clientMap.get(from).sendEvent("notification", "Something went wrong");
-        }
-    }
-
-    @MessageMapping("/end")
-    public void connectionEnd(@Payload Map<String, Object> request, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) headerAccessor.getSessionAttributes().get("user");
-        try {
-            userService.setUserStatus(user.getId(), Status.OFFLINE);
-        } catch (Exception e) {
-
-        }
-    }
-
-    @MessageMapping("/get_direct_conversations")
-    public void getDirectConversation(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        String userId = payload.get("user_id").toString();
-        Map<String, Object> response = messageService.allDirectConversations(payload.get("user_id").toString());
-        template.convertAndSendToUser(user.getId(), "/topic/get_direct_conversations", response);
-        SocketIOConfig.clientMap.get(userId).sendEvent("get_direct_conversations", response);
-    }
-
-    @MessageMapping("/start_conversation")
-    public void startConversation(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        String from = payload.get("from").toString();
-        String to = payload.get("to").toString();
-
-        Map<String, Object> response = messageService.startConversation(from, to);
-        template.convertAndSendToUser(user.getId(), "/topic/start_conversation", response);
-        SocketIOConfig.clientMap.get(from).sendEvent("start_conversation", response);
-    }
-
-    //Not In Use
-    @MessageMapping("/get_messages")
-    public void getMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        List<Message> messages = messageService.getOneToOneMessages(payload.get("conversation_id").toString());
-        template.convertAndSendToUser(user.getId(), "/topic/get_messages", messages);
-    }
-
-    @MessageMapping("/text_message")
-    public void textMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        String conversation_id = payload.get("conversation_id").toString();
-        String from = payload.get("from").toString();
-        String to = payload.get("to").toString();
-        String type = payload.get("type").toString();
-        String msg = payload.get("message").toString();
-
-        Message message = new Message().setFrom(from).setTo(to).setText(msg).setType(MessageType.valueOf(type));
-
-        messageService.addMessage(conversation_id, message);
-        template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-        template.convertAndSendToUser(from, "/topic/new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-        socketIOService.sendToUser(from, "new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-        socketIOService.sendToUser(to, "new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-    }
-
-    @MessageMapping("/media_message")
-    public void mediaMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        String conversation_id = payload.get("conversation_id").toString();
-        String to = payload.get("to").toString();
-        String from = payload.get("from").toString();
-        String type = payload.get("type").toString();
-        String msg = payload.get("message").toString();
-        String media = payload.get("media").toString();
-        String mediaType = payload.get("mediaType").toString();
-
-        Message message = new Message().setFrom(from).setTo(to).setText(msg).setMedia(media).setMediaType(mediaType).setType(MessageType.valueOf(type));
-
-        messageService.addMessage(conversation_id, message);
-        template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-        template.convertAndSendToUser(from, "/topic/new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-        SocketIOConfig.clientMap.get(from).sendEvent("new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-        SocketIOConfig.clientMap.get(to).sendEvent("new_message", new HashMap<>() {{
-            put("conversation_id", conversation_id);
-            put("message", message);
-        }});
-    }
-
-    @MessageMapping("/file_message")
-    public void fileMessages(@Payload Map<String, Object> message, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-    }
-
-    @MessageMapping("/read_messages")
-    public void readMessages(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        String from = payload.get("user_id").toString();
-        String conversation_id = payload.get("room_id").toString();
-        messageService.resetUnreadCount(from, conversation_id);
-    }
-
-    @MessageMapping("/delete_message")
-    public void deleteMessage(@Payload Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) throws ExecutionException, InterruptedException {
-        User user = (User) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
-        String message_id = payload.get("id") == null ? "" : payload.get("id").toString();
-        String conversation_id = payload.get("room_id") == null ? "" : payload.get("room_id").toString();
-        String user_id = payload.get("user_id") == null ? "" : payload.get("user_id").toString();
-        try {
-            HashMap<String, Object> response = messageService.deleteMessage(conversation_id, message_id, user_id).get();
-            template.convertAndSendToUser(user_id, "/topic/delete_message", response);
-            SocketIOConfig.clientMap.get(user_id).sendEvent("delete_message", response);
-        } catch (Exception e) {
-            template.convertAndSendToUser(user_id, "/topic/delete_message", new HashMap<>() {{
-                put("status", false);
-                put("message", e.getMessage());
-            }});
-            SocketIOConfig.clientMap.get(user_id).sendEvent("delete_message", new HashMap<>() {{
-                put("status", false);
-                put("message", e.getMessage());
-            }});
-        }
+    public WebSocketController(
+            SocketIOServer server,
+            SocketIOService socketIOService,
+            WebSocketService webSocketService,
+            UserService userService,
+            MessageService messageService,
+            GroupService groupService
+    ) {
+        this.server = server;
+        this.socketIOService = socketIOService;
+        this.webSocketService = webSocketService;
+        this.userService = userService;
+        this.messageService = messageService;
+        this.groupService = groupService;
     }
 
     @PostConstruct
     public void setupEventListeners() {
-        server.addEventListener("send_friend_request", Map.class, ((client, payload, ackRequest) -> {
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
-
-            Map<String, Object> result = webSocketService.newFriendRequest(from, to);
-            socketIOService.sendToUser(from, "notification", result.get("message"));
-            template.convertAndSendToUser(from, "/topic/notification", result.get("message"));
-            if (result.get("status").equals("success")) {
+        server.addEventListener("send_friend_request", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            String to = required(payload, "to");
+            Map<String, Object> result = webSocketService.newFriendRequest(user.getId(), to);
+            socketIOService.sendToUser(user.getId(), "notification", result.get("message"));
+            if ("success".equals(result.get("status"))) {
                 socketIOService.sendToUser(to, "notification", "New Friend Request Received");
-                template.convertAndSendToUser(to, "/topic/notification", "New Friend Request Received");
             }
-        }));
+        });
 
-        server.addEventListener("cancel_friend_request", Map.class, ((client, payload, ackRequest) -> {
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
+        server.addEventListener("cancel_friend_request", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            Map<String, Object> result = webSocketService.deleteFriendRequest(user.getId(), required(payload, "to"));
+            socketIOService.sendToUser(user.getId(), "notification", result.get("message"));
+        });
 
-            Map<String, Object> result = webSocketService.deleteFriendRequest(from, to);
-            socketIOService.sendToUser(from, "notification", result.get("message"));
-            template.convertAndSendToUser(from, "/topic/notification", result.get("message"));
-        }));
+        server.addEventListener("accept_request", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            String senderId = required(payload, "sender_id");
+            Map<String, Object> request = new HashMap<>(payload);
+            request.put("recipient_id", user.getId());
+            Map<String, Object> result = webSocketService.acceptFriendRequest(request);
+            String message = Boolean.TRUE.equals(result.get("status"))
+                    ? user.getFirstName() + " accepted your Friend Request"
+                    : "Failed to Accept";
+            socketIOService.sendToUser(Boolean.TRUE.equals(result.get("status")) ? senderId : user.getId(), "notification", message);
+        });
 
-        server.addEventListener("accept_request", Map.class, ((client, payload, ackRequest) -> {
-            String sender_id = payload.get("sender_id").toString();
-            String recipient_id = payload.get("recipient_id").toString();
+        server.addEventListener("remove_friend", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            Map<String, Object> request = new HashMap<>(payload);
+            request.put("from", user.getId());
+            Map<String, Object> result = webSocketService.removeFriend(request);
+            socketIOService.sendToUser(user.getId(), "notification", result.get("message"));
+        });
+
+        server.addEventListener("end", Map.class, (client, payload, ack) ->
+                userService.setUserStatus(user(client).getId(), Status.OFFLINE));
+
+        server.addEventListener("get_direct_conversations", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            socketIOService.sendToUser(user.getId(), "get_direct_conversations", messageService.allDirectConversations(user.getId()));
+        });
+
+        server.addEventListener("start_conversation", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            Map<String, Object> response = messageService.startConversation(user.getId(), required(payload, "to"));
+            socketIOService.sendToUser(user.getId(), "start_conversation", response);
+        });
+
+        server.addEventListener("text_message", Map.class, (client, payload, ack) ->
+                sendDirectMessage(client, payload, false));
+        server.addEventListener("media_message", Map.class, (client, payload, ack) ->
+                sendDirectMessage(client, payload, true));
+
+        server.addEventListener("read_messages", Map.class, (client, payload, ack) ->
+                messageService.resetUnreadCount(user(client).getId(), required(payload, "room_id")));
+
+        server.addEventListener("delete_message", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            Map<String, Object> response;
             try {
-                Map<String, Object> response = webSocketService.acceptFriendRequest(payload);
-                if ((boolean) response.get("status")) {
-                    socketIOService.sendToUser(sender_id, "notification", recipient_id + " accepted your Friend Request");
-                    template.convertAndSendToUser(sender_id, "/topic/notification", recipient_id + " accepted your Friend Request");
-                } else {
-                    socketIOService.sendToUser(recipient_id, "notification", "Failed to Accept");
-                    template.convertAndSendToUser(recipient_id, "/topic/notification", "Failed to Accept");
-                }
-            } catch (Exception e) {
-                socketIOService.sendToUser(recipient_id, "notification", e.getMessage());
-                template.convertAndSendToUser(recipient_id, "/topic/notification", e.getMessage());
+                response = messageService.deleteMessage(
+                        required(payload, "room_id"),
+                        required(payload, "id"),
+                        user.getId()
+                ).get();
+            } catch (Exception exception) {
+                response = Map.of("status", false, "message", "Unable to delete message");
             }
-        }));
+            socketIOService.sendToUser(user.getId(), "delete_message", response);
+        });
 
-        server.addEventListener("remove_friend", Map.class, ((client, payload, ackRequest) -> {
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
-            try {
-                Map<String, Object> response = webSocketService.removeFriend(payload);
-                socketIOService.sendToUser(from, "notification", response.get("message"));
-                template.convertAndSendToUser(from, "/topic/notification", response.get("message"));
-            } catch (Exception e) {
-                socketIOService.sendToUser(from, "notification", "Something went wrong");
-                template.convertAndSendToUser(from, "/topic/notification", "Something went wrong");
+        server.addEventListener("create_group", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            List<String> members = payload.get("members") instanceof List<?> list
+                    ? list.stream().map(String::valueOf).toList()
+                    : new ArrayList<>();
+            Map<String, Object> response = groupService.createGroup(
+                    user.getId(),
+                    optional(payload, "groupName"),
+                    optional(payload, "groupAvatar"),
+                    members
+            );
+            if (Boolean.TRUE.equals(response.get("status")) && response.get("data") instanceof Group group) {
+                publishToParticipants(groupService.getParticipantIds(group.getId()), "group_created", response);
+            } else {
+                socketIOService.sendToUser(user.getId(), "group_created", response);
             }
-        }));
+        });
 
-        server.addEventListener("end", Map.class, ((client, payload, ackRequest) -> {
-            try {
-                HandshakeData handshakeData = client.getHandshakeData();
-                String token = handshakeData.getSingleUrlParam("token");
-                if (handshakeData.getUrlParams().containsKey("token")) {
-                    token = handshakeData.getUrlParams().get("token").get(0);
-                }
-                token = token.substring(7);
-                String userId = jwtUtil.extractUserId(token);
-                userService.setUserStatus(userId, Status.OFFLINE);
-            } catch (ExecutionException e) {
+        server.addEventListener("group_text_message", Map.class, (client, payload, ack) ->
+                sendGroupMessage(client, payload, false));
+        server.addEventListener("group_media_message", Map.class, (client, payload, ack) ->
+                sendGroupMessage(client, payload, true));
 
+        server.addEventListener("read_group_messages", Map.class, (client, payload, ack) ->
+                groupService.resetUnreadCount(user(client).getId(), required(payload, "group_id")));
+
+        server.addEventListener("group_delete_message", Map.class, (client, payload, ack) -> {
+            User user = user(client);
+            String groupId = required(payload, "group_id");
+            String messageId = required(payload, "id");
+            Map<String, Object> response = groupService.deleteGroupMessage(groupId, messageId, user.getId());
+            socketIOService.sendToUser(user.getId(), "group_delete_message", response);
+            if (Boolean.TRUE.equals(response.get("status"))) {
+                publishToParticipants(groupService.getParticipantIds(groupId), "group_message_deleted", Map.of(
+                        "group_id", groupId,
+                        "message_id", messageId,
+                        "user_id", user.getId()
+                ));
             }
-        }));
+        });
+    }
 
-        server.addEventListener("get_direct_conversations", Map.class, ((client, payload, ackRequest) -> {
-            String userId = payload.get("user_id").toString();
-            Map<String, Object> response = messageService.allDirectConversations(userId);
-            socketIOService.sendToUser(userId, "get_direct_conversations", response);
-            template.convertAndSendToUser(userId, "/topic/get_direct_conversations", response);
-        }));
+    private void sendDirectMessage(SocketIOClient client, Map<String, Object> payload, boolean media) throws Exception {
+        User user = user(client);
+        String conversationId = required(payload, "conversation_id");
+        String to = required(payload, "to");
+        Message message = new Message()
+                .setFrom(user.getId())
+                .setTo(to)
+                .setText(optional(payload, "message"))
+                .setType(MessageType.valueOf(required(payload, "type")));
+        if (media) {
+            message.setMedia(required(payload, "media")).setMediaType(required(payload, "mediaType"));
+        }
+        messageService.addMessage(conversationId, message);
+        Map<String, Object> event = Map.of("conversation_id", conversationId, "message", message);
+        socketIOService.sendToUser(user.getId(), "new_message", event);
+        socketIOService.sendToUser(to, "new_message", event);
+    }
 
-        server.addEventListener("start_conversation", Map.class, ((client, payload, ackRequest) -> {
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
+    private void sendGroupMessage(SocketIOClient client, Map<String, Object> payload, boolean media) {
+        User user = user(client);
+        String groupId = required(payload, "group_id");
+        Message message = new Message()
+                .setFrom(user.getId())
+                .setTo(groupId)
+                .setText(optional(payload, "message"))
+                .setType(MessageType.valueOf(required(payload, "type")));
+        if (media) {
+            message.setMedia(required(payload, "media")).setMediaType(required(payload, "mediaType"));
+        }
+        Map<String, Object> response = groupService.addGroupMessage(groupId, message);
+        if (Boolean.TRUE.equals(response.get("status"))) {
+            publishToParticipants(groupService.getParticipantIds(groupId), "group_new_message", Map.of(
+                    "group_id", groupId,
+                    "message", message
+            ));
+        } else {
+            socketIOService.sendToUser(user.getId(), "group_new_message", response);
+        }
+    }
 
-            Map<String, Object> response = messageService.startConversation(from, to);
-            socketIOService.sendToUser(from, "start_conversation", response);
-            template.convertAndSendToUser(from, "/topic/start_conversation", response);
-        }));
+    private void publishToParticipants(List<String> participantIds, String event, Object payload) {
+        participantIds.forEach(participantId -> socketIOService.sendToUser(participantId, event, payload));
+    }
 
-        server.addEventListener("get_messages", Map.class, ((client, payload, ackRequest) -> {
-            //TODO Not in use
-        }));
+    private User user(SocketIOClient client) {
+        User user = client.get("user");
+        if (user == null) {
+            throw new IllegalStateException("Unauthenticated socket");
+        }
+        return user;
+    }
 
-        server.addEventListener("text_message", Map.class, ((client, payload, ackRequest) -> {
-            String conversation_id = payload.get("conversation_id").toString();
-            String from = payload.get("from").toString();
-            String to = payload.get("to").toString();
-            String type = payload.get("type").toString();
-            String msg = payload.get("message").toString();
+    private String required(Map<String, Object> payload, String field) {
+        String value = optional(payload, field);
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(field + " is required");
+        }
+        return value;
+    }
 
-            Message message = new Message().setFrom(from).setTo(to).setText(msg).setType(MessageType.valueOf(type));
-
-            messageService.addMessage(conversation_id, message);
-            socketIOService.sendToUser(from, "new_message", new HashMap<>() {{
-                put("conversation_id", conversation_id);
-                put("message", message);
-            }});
-            socketIOService.sendToUser(to, "new_message", new HashMap<>() {{
-                put("conversation_id", conversation_id);
-                put("message", message);
-            }});
-//            template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
-//                put("conversation_id", conversation_id);
-//                put("message", message);
-//            }});
-//            template.convertAndSendToUser(from, "/topic/new_message", new HashMap<>() {{
-//                put("conversation_id", conversation_id);
-//                put("message", message);
-//            }});
-        }));
-
-        server.addEventListener("media_message", Map.class, ((client, payload, ackRequest) -> {
-            String conversation_id = payload.get("conversation_id").toString();
-            String to = payload.get("to").toString();
-            String from = payload.get("from").toString();
-            String type = payload.get("type").toString();
-            String msg = payload.get("message").toString();
-            String media = payload.get("media").toString();
-            String mediaType = payload.get("mediaType").toString();
-
-            Message message = new Message().setFrom(from).setTo(to).setText(msg).setMedia(media).setMediaType(mediaType).setType(MessageType.valueOf(type));
-
-            messageService.addMessage(conversation_id, message);
-
-            socketIOService.sendToUser(from, "new_message", new HashMap<>() {{
-                put("conversation_id", conversation_id);
-                put("message", message);
-            }});
-            socketIOService.sendToUser(to, "new_message", new HashMap<>() {{
-                put("conversation_id", conversation_id);
-                put("message", message);
-            }});
-            template.convertAndSendToUser(to, "/topic/new_message", new HashMap<>() {{
-                put("conversation_id", conversation_id);
-                put("message", message);
-            }});
-            template.convertAndSendToUser(from, "/topic/new_message", new HashMap<>() {{
-                put("conversation_id", conversation_id);
-                put("message", message);
-            }});
-        }));
-
-        server.addEventListener("file_message", Map.class, ((client, payload, ackRequest) -> {
-
-        }));
-
-        server.addEventListener("read_messages", Map.class, ((client, payload, ackRequest) -> {
-            String from = payload.get("user_id").toString();
-            String conversation_id = payload.get("room_id").toString();
-            messageService.resetUnreadCount(from, conversation_id);
-        }));
-
-        server.addEventListener("delete_message", Map.class, ((client, payload, ackRequest) -> {
-            String message_id = payload.get("id") == null ? "" : payload.get("id").toString();
-            String conversation_id = payload.get("room_id") == null ? "" : payload.get("room_id").toString();
-            String user_id = payload.get("user_id") == null ? "" : payload.get("user_id").toString();
-            try {
-                HashMap<String, Object> response = messageService.deleteMessage(conversation_id, message_id, user_id).get();
-                socketIOService.sendToUser(user_id, "delete_message", response);
-                template.convertAndSendToUser(user_id, "/topic/delete_message", response);
-            } catch (Exception e) {
-                socketIOService.sendToUser(user_id, "delete_message", new HashMap<>() {{
-                    put("status", false);
-                    put("message", e.getMessage());
-                }});
-                template.convertAndSendToUser(user_id, "/topic/delete_message", new HashMap<>() {{
-                    put("status", false);
-                    put("message", e.getMessage());
-                }});
-            }
-        }));
-
+    private String optional(Map<String, Object> payload, String field) {
+        return payload.get(field) == null ? null : payload.get(field).toString();
     }
 }

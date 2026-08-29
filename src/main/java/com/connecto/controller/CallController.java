@@ -3,13 +3,11 @@ package com.connecto.controller;
 import com.connecto.model.User;
 import com.connecto.services.AudioCallService;
 import com.connecto.services.VideoCallService;
-import com.connecto.utilities.TokenServerAssistant;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -53,27 +51,5 @@ public class CallController {
         }
     }
 
-    @PostMapping("/generate-zego-token")
-    public ResponseEntity<?> generateZegoToken(@RequestBody Map<String, Object> payload, HttpServletRequest request) throws Exception {
-        try {
-        String userId = payload.get("userId").toString();
-        String room_id = payload.get("room_id").toString();
-        String payloadObject = "{" +
-                room_id + "," +
-                "privilege:{" +
-                "1: 1," +
-                "2: 1," +
-                "}," +
-                "stream_id_list: null" +
-                "}";
-        TokenServerAssistant.TokenInfo token = TokenServerAssistant.generateToken04(668945713, userId, "7d1c4457dfaa712a9da3f7c0a7d57537", 3600, null);
-        return ResponseEntity.status(200).body(new HashMap<>() {{
-            put("status", true);
-            put("message", "Token Generated Successfully");
-            put("token", token);
-        }});
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
 }
+

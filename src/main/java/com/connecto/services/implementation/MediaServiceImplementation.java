@@ -11,21 +11,30 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 
 
 @Service
 public class MediaServiceImplementation implements MediaService {
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/jpeg", "image/png", "image/gif", "image/webp",
+            "video/mp4", "video/webm",
+            "application/pdf", "text/plain"
+    );
     private final String bucketName = System.getenv("BUCKET_NAME");
     @Autowired
     Storage storage;
 
     @Override
     public String uploadFile(MultipartFile file) throws IOException, URISyntaxException {
-        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        if (file.isEmpty() || file.getContentType() == null || !ALLOWED_CONTENT_TYPES.contains(file.getContentType().toLowerCase(Locale.ROOT))) {
+            throw new IllegalArgumentException("Unsupported or empty file");
+        }
+        String originalName = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
+        String extension = originalName.lastIndexOf('.') >= 0 ? originalName.substring(originalName.lastIndexOf('.')).replaceAll("[^A-Za-z0-9.]", "") : "";
+        String fileName = UUID.randomUUID() + extension;
         Bucket bucket = storage.get(bucketName);
         if (bucket == null) {
             throw new RuntimeException("Bucket not found: " + bucketName);
