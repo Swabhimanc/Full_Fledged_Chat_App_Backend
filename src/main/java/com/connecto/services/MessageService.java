@@ -21,7 +21,7 @@ public interface MessageService {
 
     Map<String, Object> startConversation(String from, String to) throws ExecutionException, InterruptedException;
 
-    List<Message> getOneToOneMessages(String id) throws ExecutionException, InterruptedException;
+    List<Message> getOneToOneMessages(String id, String userId) throws ExecutionException, InterruptedException;
 
     void resetUnreadCount(String from, String conversationId) throws ExecutionException, InterruptedException;
 

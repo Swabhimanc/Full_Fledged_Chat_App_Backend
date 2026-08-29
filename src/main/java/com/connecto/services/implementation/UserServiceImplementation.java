@@ -14,14 +14,18 @@ import com.connecto.repositories.FriendRequestRepository;
 import com.connecto.repositories.UserRepository;
 import com.connecto.repositories.VideoCallRepository;
 import com.connecto.services.UserService;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -128,56 +132,79 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public Map<String, Object> getCallLogs(String userId) throws ExecutionException, InterruptedException {
+    public Map<String, Object> getCallLogs(String userId, int limit) throws ExecutionException, InterruptedException {
         List<Map<String, Object>> response = new ArrayList<>();
 
-        List<QueryDocumentSnapshot> videoCallLogs = videoCallRepository.getVideoCallLogs(userId);
-        List<QueryDocumentSnapshot> audioCallLogs = audioCallRepository.getAudioCallLogs(userId);
+        int resolvedLimit = limit > 0 ? limit : 40;
+        List<QueryDocumentSnapshot> videoCallLogs = videoCallRepository.getVideoCallLogs(userId, resolvedLimit);
+        List<QueryDocumentSnapshot> audioCallLogs = audioCallRepository.getAudioCallLogs(userId, resolvedLimit);
+
+        Set<String> participantIds = new HashSet<>();
+        videoCallLogs.forEach(doc -> {
+            VideoCall call = doc.toObject(VideoCall.class);
+            if (call.getFrom() != null) participantIds.add(call.getFrom());
+            if (call.getTo() != null) participantIds.add(call.getTo());
+        });
+        audioCallLogs.forEach(doc -> {
+            AudioCall call = doc.toObject(AudioCall.class);
+            if (call.getFrom() != null) participantIds.add(call.getFrom());
+            if (call.getTo() != null) participantIds.add(call.getTo());
+        });
+
+        Map<String, UserResponseDTO> usersById = new HashMap<>();
+        List<DocumentSnapshot> userSnapshots = userRepository.findUsersByIds(new ArrayList<>(participantIds));
+        for (DocumentSnapshot snapshot : userSnapshots) {
+            if (snapshot.exists()) {
+                UserResponseDTO dto = snapshot.toObject(UserResponseDTO.class);
+                if (dto != null) {
+                    usersById.put(snapshot.getId(), dto);
+                }
+            }
+        }
 
         List<VideoCallResponseDTO> videoCalls = new ArrayList<>();
         List<AudioCallResponseDTO> audioCalls = new ArrayList<>();
 
         videoCallLogs.forEach(doc -> {
             VideoCall videoCall = doc.toObject(VideoCall.class);
-            //Generate a response
-            try {
-                UserResponseDTO from = userRepository.findUserById(videoCall.getFrom()).toObject(UserResponseDTO.class);
-                UserResponseDTO to = userRepository.findUserById(videoCall.getTo()).toObject(UserResponseDTO.class);
+            UserResponseDTO from = usersById.get(videoCall.getFrom());
+            UserResponseDTO to = usersById.get(videoCall.getTo());
 
-                VideoCallResponseDTO temp = new VideoCallResponseDTO()
-                        .setId(videoCall.getId())
-                        .setFrom(from)
-                        .setTo(to)
-                        .setParticipants(videoCall.getParticipants())
-                        .setStatus(videoCall.getStatus())
-                        .setVerdict(videoCall.getVerdict())
-                        .setEndedAt(videoCall.getEndedAt())
-                        .setStartedAt(videoCall.getStartedAt());
-                videoCalls.add(temp);
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
+            if (from == null || to == null) {
+                return;
             }
+
+            VideoCallResponseDTO temp = new VideoCallResponseDTO()
+                    .setId(videoCall.getId())
+                    .setFrom(from)
+                    .setTo(to)
+                    .setParticipants(videoCall.getParticipants())
+                    .setStatus(videoCall.getStatus())
+                    .setVerdict(videoCall.getVerdict())
+                    .setEndedAt(videoCall.getEndedAt())
+                    .setStartedAt(videoCall.getStartedAt());
+            videoCalls.add(temp);
         });
+
         audioCallLogs.forEach(doc -> {
             AudioCall audioCall = doc.toObject(AudioCall.class);
-            //Generate a response
-            try {
-                UserResponseDTO from = userRepository.findUserById(audioCall.getFrom()).toObject(UserResponseDTO.class);
-                UserResponseDTO to = userRepository.findUserById(audioCall.getTo()).toObject(UserResponseDTO.class);
+            UserResponseDTO from = usersById.get(audioCall.getFrom());
+            UserResponseDTO to = usersById.get(audioCall.getTo());
 
-                AudioCallResponseDTO temp = new AudioCallResponseDTO()
-                        .setId(audioCall.getId())
-                        .setFrom(from)
-                        .setTo(to)
-                        .setParticipants(audioCall.getParticipants())
-                        .setStatus(audioCall.getStatus())
-                        .setVerdict(audioCall.getVerdict())
-                        .setEndedAt(audioCall.getEndedAt())
-                        .setStartedAt(audioCall.getStartedAt());
-                audioCalls.add(temp);
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
+            if (from == null || to == null) {
+                return;
             }
+
+            AudioCallResponseDTO temp = new AudioCallResponseDTO()
+                    .setId(audioCall.getId())
+                    .setFrom(from)
+                    .setTo(to)
+                    .setParticipants(audioCall.getParticipants())
+                    .setStatus(audioCall.getStatus())
+                    .setVerdict(audioCall.getVerdict())
+                    .setEndedAt(audioCall.getEndedAt())
+                    .setStartedAt(audioCall.getStartedAt());
+            audioCalls.add(temp);
         });
 
         for (VideoCallResponseDTO entry : videoCalls) {
@@ -245,10 +272,24 @@ public class UserServiceImplementation implements UserService {
                 }});
             }
         }
+
+        response.sort((a, b) -> {
+            Date left = (Date) a.get("startedAt");
+            Date right = (Date) b.get("startedAt");
+            if (left == null && right == null) return 0;
+            if (left == null) return 1;
+            if (right == null) return -1;
+            return right.compareTo(left);
+        });
+
+        boolean hasMore = videoCallLogs.size() == resolvedLimit || audioCallLogs.size() == resolvedLimit;
+
         return new HashMap<>() {{
             put("status", true);
             put("message", "Call Logs Fetched Successfully");
             put("data", response);
+            put("hasMore", hasMore);
+            put("limit", resolvedLimit);
         }};
     }
 

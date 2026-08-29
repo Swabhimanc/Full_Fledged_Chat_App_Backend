@@ -1,10 +1,14 @@
 package com.connecto.repositories;
 
 import com.connecto.DTO.responseDTO.UserResponseDTO;
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutures;
 import com.google.cloud.firestore.*;
 import com.connecto.model.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -80,5 +84,20 @@ public class UserRepository {
     }
     public DocumentReference findUserReferenceById(String userId){
         return usersRef.document(userId);
+    }
+
+    public List<DocumentSnapshot> findUsersByIds(List<String> userIds) throws ExecutionException, InterruptedException {
+        if (userIds == null || userIds.isEmpty()) {
+            return List.of();
+        }
+
+        LinkedHashSet<String> uniqueIds = new LinkedHashSet<>(userIds);
+        List<ApiFuture<DocumentSnapshot>> futures = new ArrayList<>();
+
+        for (String id : uniqueIds) {
+            futures.add(usersRef.document(id).get());
+        }
+
+        return ApiFutures.allAsList(futures).get();
     }
 }

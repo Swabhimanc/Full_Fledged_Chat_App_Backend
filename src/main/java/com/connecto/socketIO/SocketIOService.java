@@ -5,8 +5,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 
 @Service
 public class SocketIOService {
@@ -30,8 +29,9 @@ public class SocketIOService {
     }
 
     public void sendToUser(String userId, String event, Object data) {
-        if (SocketIOConfig.clientMap.containsKey(userId)) {
-            SocketIOConfig.clientMap.get(userId).sendEvent(event, data);
-        }
+        SocketIOConfig.clientMap.computeIfPresent(userId, (id, clients) -> {
+            clients.forEach(client -> client.sendEvent(event, data));
+            return clients;
+        });
     }
 }

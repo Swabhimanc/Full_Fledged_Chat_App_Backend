@@ -31,7 +31,7 @@ public class VideoCallRepository {
                 .get()
                 .getDocuments();
         List<QueryDocumentSnapshot> doc2 = videoCallRef
-                .whereEqualTo("participants",List.of(from,to))
+                .whereEqualTo("participants",List.of(to,from))
                 .get()
                 .get()
                 .getDocuments();
@@ -49,8 +49,24 @@ public class VideoCallRepository {
         }
     }
 
+    public boolean isParticipant(String callId, String userId) throws ExecutionException, InterruptedException {
+        DocumentSnapshot call = videoCallRef.document(callId).get().get();
+        List<String> participants = call.exists() ? (List<String>) call.get("participants") : null;
+        return participants != null && participants.contains(userId);
+    }
+
     public List<QueryDocumentSnapshot> getVideoCallLogs(String userId) throws ExecutionException, InterruptedException {
         List<QueryDocumentSnapshot> response = videoCallRef.whereArrayContains("participants",userId).get().get().getDocuments();
         return response;
+    }
+
+    public List<QueryDocumentSnapshot> getVideoCallLogs(String userId, int limit) throws ExecutionException, InterruptedException {
+        return videoCallRef
+                .whereArrayContains("participants", userId)
+                .orderBy("startedAt", Query.Direction.DESCENDING)
+                .limit(limit)
+                .get()
+                .get()
+                .getDocuments();
     }
 }

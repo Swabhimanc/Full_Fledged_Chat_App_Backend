@@ -3,6 +3,7 @@ package com.connecto.utilities.security.filter;
 import com.connecto.services.implementation.AuthServiceImplementation;
 import com.connecto.utilities.CustomUserDetails;
 import com.connecto.utilities.security.JwtUtil;
+import com.connecto.utilities.security.SessionCookieService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,20 +26,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Autowired
     AuthServiceImplementation authServiceImplementation;
 
+    @Autowired
+    SessionCookieService sessionCookieService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = null;
         String userId = null;
         String authorizationHeader = request.getHeader("Authorization");
+        token = sessionCookieService.accessToken(request);
 
-        if(authorizationHeader==null){
-            String query = request.getQueryString();
-            if (query != null && query.contains("token=")) {
-                token = query.split("token=")[1].split("&")[0];
-            }
-        }
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+        if ((token == null || token.isBlank()) && authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             token = authorizationHeader.substring(7);
         }
         if (token!=null) {
@@ -51,7 +49,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             } catch (Exception e) {
                 throw new RuntimeException();
             }
-            if (jwtUtil.validateToken(token, userDetails.getUser().getId())) {
+            if (jwtUtil.isAccessToken(token) && jwtUtil.validateToken(token, userDetails.getUser().getId())) {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

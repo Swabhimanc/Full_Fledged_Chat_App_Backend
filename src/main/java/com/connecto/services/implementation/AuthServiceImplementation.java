@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 
 @Service
 public class AuthServiceImplementation implements AuthService {
@@ -42,7 +45,11 @@ public class AuthServiceImplementation implements AuthService {
 
     @Override
     public Map<String, Object> register(Map<String, Object> reqObj) throws ExecutionException, InterruptedException, EmailException, IOException {
-        reqObj.replace("password", passwordEncoder.encode(reqObj.get("password").toString()));
+        String rawPassword = Objects.toString(reqObj.get("password"), "");
+        if (rawPassword.length() < 8) {
+            return Map.of("status", false, "message", "Password must be at least 8 characters long");
+        }
+        reqObj.replace("password", passwordEncoder.encode(rawPassword));
 
         // Email check logic...
         QuerySnapshot emailCheck = userRepository.findUserByEmail((String) reqObj.get("email"));
@@ -157,14 +164,14 @@ public class AuthServiceImplementation implements AuthService {
         QuerySnapshot userSnapshot = userRepository.findUserByEmail(requestEmail);
         if (userSnapshot.isEmpty()) {
             return new HashMap<>() {{
-                put("status", false);
-                put("message", "There is no user with given email address");
+                put("status", true);
+                put("message", "If the account exists, a password reset link has been sent.");
             }};
         }
         String userId = userSnapshot.getDocuments().get(0).getId();
         String resetToken = PasswordResetTokenGenerator.generateRandomToken();
         userRepository.updateUser(userId, new HashMap<>() {{
-            put("passwordResetToken", resetToken);
+            put("passwordResetToken", hashToken(resetToken));
             put("passwordResetExpires", new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10)));
         }});
         String resetUrl = String.format(URL+"/auth/new-password/?token=%s", resetToken);
@@ -199,7 +206,7 @@ public class AuthServiceImplementation implements AuthService {
                 put("message", "Password and Confirm passwords don't match.");
             }};
         }
-        QuerySnapshot userSnapshot = userRepository.getUsersRef().whereEqualTo("passwordResetToken", resetToken)
+        QuerySnapshot userSnapshot = userRepository.getUsersRef().whereEqualTo("passwordResetToken", hashToken(resetToken))
                 .whereGreaterThan("passwordResetExpires", Timestamp.now()).get().get();
         if (userSnapshot.isEmpty()) {
             return new HashMap<>() {{
@@ -245,22 +252,27 @@ public class AuthServiceImplementation implements AuthService {
         DocumentSnapshot userSnapshot = usersSnapshot.getDocuments().get(0);
         Timestamp validTill = userSnapshot.get("otpExpiry", Timestamp.class);
         Timestamp now = Timestamp.now();
-        if (!passwordEncoder.matches(requestOtp, (String)userSnapshot.get("otp"))) {
+        String storedOtp = userSnapshot.getString("otp");
+        if (storedOtp == null || validTill == null || validTill.compareTo(now) <= 0) {
+            return Map.of("status", false, "message", "OTP is invalid or expired.");
+        }
+        Number attemptValue = (Number) userSnapshot.get("otpAttempts");
+        long attempts = attemptValue == null ? 0 : attemptValue.longValue();
+        if (attempts >= 5) {
+            return Map.of("status", false, "message", "Too many incorrect attempts. Request a new OTP.");
+        }
+        if (!passwordEncoder.matches(requestOtp, storedOtp)) {
+            userRepository.updateUser(userSnapshot.getId(), "otpAttempts", attempts + 1);
             return new HashMap<>() {{
                 put("status", false);
                 put("message", "Incorrect OTP entered");
             }};
-        } else if (validTill!=null && validTill.compareTo(now) <= 0) {
-            return new HashMap<>() {{
-                put("status", false);
-                put("message", "OTP Expired.");
-            }};
-        }
-        else {
+        } else {
             UserResponseDTO userResponseDTO = userRepository.updateUser(userSnapshot.getId(),new HashMap<>(){{
                 put("verified",true);
                 put("otp",null);
                 put("otpExpiry",null);
+                put("otpAttempts", null);
             }});
             return new HashMap<>(){{
                 put("status", true);
@@ -271,8 +283,13 @@ public class AuthServiceImplementation implements AuthService {
             }};
         }
     }
+
+    private String hashToken(String token) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to hash token", e);
+        }
+    }
 }
-//TODO Add status for new messages,
-// Start timer when OTP sent(Add to mail body the validity of OTP)
-// Add max number of incorrect retries
-//

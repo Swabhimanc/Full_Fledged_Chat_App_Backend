@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class GoogleAuthServiceImplementation implements GoogleAuthService {
@@ -76,11 +77,11 @@ public class GoogleAuthServiceImplementation implements GoogleAuthService {
     public Map<String, Object> register(Map<String, Object> request) throws Exception {
         GoogleIdToken.Payload payload = verifyGoogleToken(request.get("credential").toString());
 
-        String firstName = payload.get("family_name").toString();
-        String lastName = payload.get("family_name").toString();
+        String firstName = Objects.toString(payload.get("given_name"), "Google");
+        String lastName = Objects.toString(payload.get("family_name"), "User");
         String email = payload.getEmail();
         String avatar = payload.get("picture")!=null ? payload.get("picture").toString():"";
-        String googleUserId = payload.getUserId();
+        String googleUserId = payload.getSubject();
         boolean isEmailVerified = payload.getEmailVerified();
         QuerySnapshot querySnapshot = userRepository.findUserByEmail(email);
         if (!querySnapshot.isEmpty()) {
