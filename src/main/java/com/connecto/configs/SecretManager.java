@@ -17,7 +17,7 @@ public class SecretManager {
     public String getServiceKey() {
         String projectId = System.getenv("PROJECT_ID");
         String secretId = System.getenv("FIRESTORE_SECRET");
-        String versionId = "1"; // or specific version number
+        String versionId = "latest"; // or specific version number
 
         // 1) Preferred for production: fetch from GCP Secret Manager if env vars are provided
         if (hasText(projectId) && hasText(secretId)) {
