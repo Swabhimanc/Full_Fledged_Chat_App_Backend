@@ -36,7 +36,6 @@ steps:
       - 'managed'
       - '--port'
       - '8080'
-      - '--clear-startup-probe'
       - '--allow-unauthenticated'
       - '--service-account'
       - 'lead-editor@beaming-age-431614-v4.iam.gserviceaccount.com'
