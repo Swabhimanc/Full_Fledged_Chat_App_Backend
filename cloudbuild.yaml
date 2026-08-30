@@ -26,18 +26,23 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'connecto'  # Ensure this is the correct Cloud Run service name
+      - 'connecto'
       - '--image'
       - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
       - '--region'
       - 'asia-south1'
       - '--platform'
       - 'managed'
+      - '--port'
+      - '8080'
       - '--allow-unauthenticated'
       - '--service-account'
       - 'lead-editor@beaming-age-431614-v4.iam.gserviceaccount.com'
       - '--memory'
       - '1Gi'
+      - '--timeout'
+      - '300'
+    timeout: '600s'
 
 images:
   - 'gcr.io/beaming-age-431614-v4/full-fledged-chat-app-backend:latest'
